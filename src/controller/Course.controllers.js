@@ -203,3 +203,52 @@ export const fetchCategories = asyncHandler(async (req, res) => {
     // Return the categories
     res.status(200).json(new ApiResponse(200, "Categories fetched successfully", categories));
 });
+
+// Add student to a course
+export const addStudentToCourse = asyncHandler(async (req, res) => {
+    const { courseId } = req.params;
+    const { email, teacherId } = req.body;
+    console.log("req.params:", req.params);
+    console.log("req.body:", req.body);
+
+    if (!email) {
+        throw new ApiError(400, "Student email is required");
+    }
+    if (!teacherId) {
+        throw new ApiError(400, "Teacher ID is required");
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+        throw new ApiError(404, "Course not found");
+    }
+
+    // Ensure the teacher adding the student is the owner of the course
+    if (course.teacherId.toString() !== teacherId) {
+        throw new ApiError(403, "You are not authorized to add students to this course");
+    }
+
+    // Check if the student is already enrolled
+    const alreadyEnrolled = course.enrolledStudents.some(
+        (student) => student.email === email
+    );
+    if (alreadyEnrolled) {
+        throw new ApiError(400, "Student is already enrolled in this course");
+    }
+
+    // Check if the user exists
+    const user = await User.findOne({ email });
+    if (user) {
+        // Add the user to the course
+        course.enrolledStudents.push({ email, status: "accepted" });
+        user.courses.push(course._id);
+        await user.save();
+    } else {
+        // Add the student with a pending status
+        course.enrolledStudents.push({ email, status: "pending" });
+        // Trigger email invitation logic here
+    }
+
+    await course.save();
+    res.status(200).json({ message: "Student added to the course" });
+});

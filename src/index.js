@@ -8,6 +8,7 @@ import authRoutes from "./router/Auth.router.js";
 import courseRouter from "./router/Course.router.js"
 import moduleRoutes from "./router/Module.router.js";
 import userProfileRoutes from "./router/User.router.js"; // Import user routes
+import questionRouter from "./router/AddQuestion.router.js"; // Import Question Router
 
 dotenv.config({
     path: "./.env",
@@ -25,6 +26,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/courses", courseRouter);
 app.use("/api/v1/modules", moduleRoutes);
 app.use("/api/v1/user", userProfileRoutes);
+app.use("/api/v1/questions", questionRouter); // Add Question Router
 
 // Add module routes
 

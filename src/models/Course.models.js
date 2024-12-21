@@ -1,36 +1,39 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const courseSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        description: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        category: {
-            type: String,
-            required: true,
-            enum: ['Programming', 'Data Science', 'Web Development'], // Predefined categories
-        },
-        imageUrl: {
-            type: String, // Store the URL/path of the uploaded image
-            required: true,
-        },
-        user: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User', // Reference to the User model
-            required: true,
-        },
+const enrolledStudentSchema = new mongoose.Schema({
+    email: {
+        type: String,
+        required: true,
     },
-    {
-        timestamps: true, // Automatically adds createdAt and updatedAt fields
-    }
-);
+    status: {
+        type: String,
+        enum: ["pending", "accepted"],
+        default: "pending",
+    },
+});
 
-const Course = mongoose.model('Course', courseSchema);
-export default Course;
+const courseSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+    },
+    description: {
+        type: String,
+        required: true,
+    },
+    category: {
+        type: String,
+        required: true,
+    },
+    imageUrl: {
+        type: String,
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
+    enrolledStudents: [enrolledStudentSchema],
+});
+
+export default mongoose.model("Course", courseSchema);

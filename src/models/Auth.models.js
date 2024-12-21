@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: 6,
     },
+    courses: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Course",
+        },
+    ],
 });
 
 // Encrypt password before saving
