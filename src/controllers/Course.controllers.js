@@ -4,7 +4,7 @@ import { ApiResponse } from "../utilis/ApiResponse.js";
 import Course from "../models/Course.models.js";
 import User from "../models/User.models.js";
 import { uploadCloudinary } from "../utilis/Cloudinary.utilis.js";
-
+import { sendEnrollmentEmail } from "../utilis/email.util.js";
 /* -------------------------------------------------------------------------- */
 /*                               CREATE COURSE                                */
 /* -------------------------------------------------------------------------- */
@@ -239,62 +239,76 @@ export const fetchCategories = asyncHandler(async (req, res) => {
  *  we must find the User by email to get their _id. If no user is found, we throw an error.
  *  If the teacher is not the owner of the course, we throw an error.
  */
+// course.controllers.js
+function generateRandomPassword(length = 12) {
+    // Define the character set you want to allow in the password
+    const chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?,./-=";
+
+    let password = "";
+    for (let i = 0; i < length; i++) {
+        // Pick a random index from the chars string
+        const randomIndex = Math.floor(Math.random() * chars.length);
+        // Append the character at that index to 'password'
+        password += chars[randomIndex];
+    }
+
+    return password;
+}
+// POST /api/v1/courses/:courseId/add-student
 export const addStudentToCourse = asyncHandler(async (req, res) => {
     const { courseId } = req.params;
-    const { studentEmail, teacherId } = req.body; // rename "email" -> "studentEmail" for clarity
+    const { email, teacherId } = req.body;
 
-    if (!studentEmail) {
-        throw new ApiError(400, "Student email is required");
-    }
-    if (!teacherId) {
-        throw new ApiError(400, "Teacher ID is required");
-    }
+    console.log("[addStudentToCourse] courseId:", courseId, "email:", email, "teacherId:", teacherId);
 
-    // Find the course
+    // 1) Find course
     const course = await Course.findById(courseId);
     if (!course) {
         throw new ApiError(404, "Course not found");
     }
 
-    // Ensure the teacher adding the student owns the course
-    if (course.teacher.toString() !== teacherId) {
-        throw new ApiError(
-            403,
-            "You are not authorized to add students to this course"
-        );
+    // 2) If user doesn’t exist, create
+    let user = await User.findOne({ email });
+    if (!user) {
+        const password = generateRandomPassword(10); // 10-char password
+
+        console.log("[addStudentToCourse] Creating new user with email:", email);
+        user = await User.create({ email, role: "student", password });
     }
 
-    // Find the student by email
-    const studentUser = await User.findOne({ email: studentEmail });
-    if (!studentUser) {
-        // If the user does not exist in the DB, we cannot enroll them
-        throw new ApiError(400, "Student with that email does not exist");
-    }
-
-    // Check if the student is already enrolled
+    // 3) Already enrolled check
     const alreadyEnrolled = course.enrolledStudents.some(
-        (enroll) => enroll.student.toString() === studentUser._id.toString()
+        (enroll) => enroll.student.toString() === user._id.toString()
     );
-
     if (alreadyEnrolled) {
-        throw new ApiError(400, "Student is already enrolled in this course");
+        return res
+            .status(200)
+            .json(new ApiResponse(200, "Student is already enrolled", course));
     }
 
-    // Enroll the student
-    course.enrolledStudents.push({
-        student: studentUser._id,
-        status: "accepted", // or "pending" if you want to verify
-    });
+    // 4) Enroll them
+    course.enrolledStudents.push({ student: user._id, status: "accepted" });
+    user.courses.push(course._id);
 
-    // Also add this course to the user's "courses" array
-    studentUser.courses.push(course._id);
+    await Promise.all([course.save(), user.save()]);
 
-    await Promise.all([course.save(), studentUser.save()]);
-
-    res
+    // 5) Possibly send an email to the new student
+    // sendEnrollmentEmail(email, course.name).catch(err => console.error(err));
+    // optional
+    try {
+        await sendEnrollmentEmail(email, course.name);
+    } catch (emailErr) {
+        console.error("Failed to send enrollment email:", emailErr);
+    }
+    return res
         .status(200)
-        .json(new ApiResponse(200, "Student added to the course"));
+        .json(
+            new ApiResponse(200, "Student added to the course", { course, user })
+        );
 });
+
+
 
 /* -------------------------------------------------------------------------- */
 /*                             FETCH TEACHERS                                 */
@@ -316,4 +330,107 @@ export const fetchTeachers = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(new ApiResponse(200, "Teachers fetched successfully", teachers));
+});
+
+
+export const getCourseMates = asyncHandler(async (req, res) => {
+    const { courseId } = req.params;
+    const course = await Course.findById(courseId)
+        .populate("enrolledStudents.student", "name email") // So you see each student’s name/email
+        .lean();
+
+    if (!course) {
+        throw new ApiError(404, "Course not found");
+    }
+
+    // The array `course.enrolledStudents` now has sub-docs like:
+    // { student: { _id, name, email }, status, ... }
+    res
+        .status(200)
+        .json(
+            new ApiResponse(200, "Fetched course mates", course.enrolledStudents)
+        );
+});
+
+
+export const getEnrolledCourses = asyncHandler(async (req, res) => {
+    // Suppose req.user._id is the student's ID (from auth middleware)
+    const user = await User.findById(req.user._id)
+        .populate("courses", "name description teacher")
+        .lean();
+    if (!user) throw new ApiError(404, "User not found");
+
+    return res.status(200).json(
+        new ApiResponse(200, "Enrolled courses fetched", user.courses)
+    );
+});
+
+
+/**
+ * GET /api/v1/courses/:courseId/enrolled-students
+ * Returns an array of enrolled students for the given course
+ */
+export const getEnrolledStudents = asyncHandler(async (req, res) => {
+    
+    const { courseId } = req.params;
+
+    const course = await Course.findById(courseId)
+        .populate("enrolledStudents.student", "name email role")
+        .lean();
+
+    if (!course) {
+        throw new ApiError(404, "Course not found");
+    }
+
+    // The array course.enrolledStudents is like:
+    // [ { student: { _id, name, email }, status: "accepted" }, ... ]
+    // You can transform or rename fields as needed.
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            "Fetched enrolled students successfully",
+            course.enrolledStudents
+        )
+    );
+});
+
+/**
+ * DELETE /api/v1/courses/:courseId/enrolled-students/:studentId
+ * Removes the student from the course (not necessarily from the DB)
+ */
+export const removeStudentFromCourse = asyncHandler(async (req, res) => {
+    const { courseId, studentId } = req.params;
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+        throw new ApiError(404, "Course not found");
+    }
+
+    // Filter out that student
+    const prevLength = course.enrolledStudents.length;
+    course.enrolledStudents = course.enrolledStudents.filter(
+        (enroll) => enroll.student.toString() !== studentId
+    );
+
+    if (course.enrolledStudents.length === prevLength) {
+        throw new ApiError(404, "Student not found in this course");
+    }
+
+    await course.save();
+
+    // Optionally also remove the course from the user's 'courses' array
+    // let user = await User.findById(studentId);
+    // if (user) {
+    //   user.courses = user.courses.filter(c => c.toString() !== courseId);
+    //   await user.save();
+    // }
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            "Removed student from course",
+            { courseId, studentId }
+        )
+    );
 });

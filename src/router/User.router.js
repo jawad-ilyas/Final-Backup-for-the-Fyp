@@ -5,6 +5,7 @@ import {
     fetchUsers,
     deleteUser,
     getAllTeachers,
+    getEnrolledCourses,
 } from "../controllers/User.controllers.js";
 import {protect} from "../middleware/auth.middleware.js";
 const router = Router();
@@ -53,5 +54,6 @@ router.delete("/:id", /* protect, adminCheck, */ deleteUser);
  * Returns all teachers (admin only)
  */
 router.get("/teachers", /* protect, adminCheck, */ getAllTeachers);
+router.get("/courses",  getEnrolledCourses);
 
 export default router;

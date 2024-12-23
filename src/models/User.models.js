@@ -11,12 +11,10 @@ const userSchema = new mongoose.Schema(
         },
         name: {
             type: String,
-            required: true,
             trim: true,
         },
         password: {
             type: String,
-            required: true,
             minlength: 6,
         },
         role: {
@@ -32,11 +30,7 @@ const userSchema = new mongoose.Schema(
         ],
 
         // NEW OPTIONAL FIELDS FOR TEACHER PROFILE
-        slug: {
-            type: String,
-            trim: true,
-            unique: true, // or true if you want a unique handle
-        },
+      
         imageUrl: {
             type: String,
             default: '/images/default.jpg', // or null
@@ -52,6 +46,14 @@ const userSchema = new mongoose.Schema(
         includeInEmails: {
             type: Boolean,
             default: false,
+        },
+        gradeLevel : {
+            type: String,
+            trim: true,
+        },
+        major : {
+            type: String,
+            trim: true,
         },
         // Social links
         twitter: { type: String, trim: true },

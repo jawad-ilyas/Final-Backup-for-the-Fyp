@@ -10,6 +10,10 @@ import {
     fetchCategories,
     addStudentToCourse,
     fetchTeachers,
+    getEnrolledCourses,
+    getCourseMates,
+    getEnrolledStudents,
+    removeStudentFromCourse
 } from "../controllers/Course.controllers.js";
 
 const router = Router();
@@ -38,5 +42,18 @@ router.get("/teachers", fetchTeachers);
 
 // add student
 router.post("/:courseId/add-student", addStudentToCourse);
+router.get("/:courseId/students", getCourseMates);
+// user.routes.js
+router.get("/courses", getEnrolledCourses);
+/**
+ * GET /api/v1/courses/:courseId/enrolled-students
+ * => getEnrolledStudents
+ */
+router.get("/:courseId/enrolled-students", getEnrolledStudents);
 
+/**
+ * DELETE /api/v1/courses/:courseId/enrolled-students/:studentId
+ * => removeStudentFromCourse
+ */
+router.delete("/:courseId/enrolled-students/:studentId", removeStudentFromCourse);
 export default router;

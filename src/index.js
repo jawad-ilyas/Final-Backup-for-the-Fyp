@@ -10,6 +10,8 @@ import moduleRoutes from "./router/Module.router.js";
 import userProfileRoutes from "./router/User.router.js"; // Import user routes
 import questionRouter from "./router/AddQuestion.router.js"; // Import Question Router
 import teacherRoutes from "./router/teacher.router.js";
+import studentRoutes from './router/student.routes.js';
+
 
 dotenv.config({
     path: "./.env",
@@ -29,6 +31,7 @@ app.use("/api/v1/modules", moduleRoutes);
 app.use("/api/v1/user", userProfileRoutes);
 app.use("/api/v1/questions", questionRouter); // Add Question Router
 app.use("/api/v1/teachers", teacherRoutes);
+app.use('/api/v1/students', studentRoutes);
 
 // Add module routes
 

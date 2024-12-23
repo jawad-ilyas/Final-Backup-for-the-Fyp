@@ -15,6 +15,7 @@ import { ApiResponse } from "../utilis/ApiResponse.js";
  * "req.user" is typically set by your auth middleware.
  */
 export const getUserProfile = asyncHandler(async (req, res) => {
+    console.log("req user id", req.user);
     const user = await User.findById(req.user._id).select("-password");
 
     if (!user) {
@@ -135,4 +136,19 @@ export const getAllTeachers = asyncHandler(async (req, res) => {
             users
         )
     );
+});
+
+
+export const getEnrolledCourses = asyncHandler(async (req, res) => {
+    // Suppose req.user._id is the logged-in student
+    const user = await User.findById(req.user._id)
+        .populate("courses", "name description teacher")
+        .lean();
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    res
+        .status(200)
+        .json(new ApiResponse(200, "Fetched enrolled courses", user.courses));
 });
