@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const moduleSchema = new mongoose.Schema(
     {
@@ -19,22 +19,25 @@ const moduleSchema = new mongoose.Schema(
             type: Date,
             required: true,
         },
-        courseId: {
+        course: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Course",
+            ref: 'Course',
             required: true,
         },
-        teacherId: {
+        // If modules can have different teachers than the main course teacher:
+        // Or you can rely on course.teacher to determine ownership
+        teacher: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User", // Assuming "User" is the teacher model
+            ref: 'User',
             required: true,
         },
     },
     {
-        timestamps: true, // Automatically adds createdAt and updatedAt fields
+        timestamps: true,
     }
 );
 
-const Module = mongoose.model("Module", moduleSchema);
+moduleSchema.index({ course: 1, startTime: 1 }); // Example composite index
 
+const Module = mongoose.model('Module', moduleSchema);
 export default Module;

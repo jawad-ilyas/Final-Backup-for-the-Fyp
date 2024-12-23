@@ -9,7 +9,7 @@ import {
     searchQuestions,
     getCategoriesAndTags,
     deleteQuestionById,
-} from "../controller/AddQuestion.controllers.js";
+} from "../controllers/AddQuestion.controllers.js";
 
 const router = Router();
 router.route("/categories-tags").get(getCategoriesAndTags);

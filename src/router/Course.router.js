@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { upload } from "../middlerware/multer.middleware.js";
+import { upload } from "../middleware/multer.middleware.js";
 import {
     createCourse,
     updateCourse,
@@ -8,32 +8,35 @@ import {
     searchCourses,
     searchCoursesByUser,
     fetchCategories,
-    addStudentToCourse
-} from "../controller/Course.controllers.js";
-import { protect } from "../middlerware/auth.middleware.js"; // Import authentication middleware
+    addStudentToCourse,
+    fetchTeachers,
+} from "../controllers/Course.controllers.js";
 
 const router = Router();
+// fetch categories
+router.get("/fetchcategories", fetchCategories);
+// create course (POST w/ image)
+router.post("/createcourse", upload.single("image"), createCourse);
 
-// Route to create a course
-router.route("/createcourse").post(upload.single("image"),  createCourse);
+// update course (PUT w/ image)
+router.put("/updatecourse/:id", upload.single("image"), updateCourse);
 
-// Route to update a course
-router.route("/updatecourse/:id").put(upload.single("image"),  updateCourse);
+// delete course
+router.delete("/deletecourse/:id", deleteCourse);
 
-// Route to fetch all courses
-router.route("/fetchallcourses/:id").get( fetchAllCourses);
+// fetch all courses
+router.get("/all", fetchAllCourses);
 
-// Route to search for courses
-router.route("/searchcourses").get( searchCourses);
-router.route("/searchCoursesByUser").get( searchCoursesByUser);
+// search courses
+router.get("/searchcourses", searchCourses);
 
-// Route to delete a course
-router.route("/deletecourse/:id").delete( deleteCourse);
+// search courses by user
+router.get("/searchcoursesbyuser", searchCoursesByUser);
+router.get("/teachers", fetchTeachers);
 
-// Route to fetch distinct categories
-router.route("/fetchcategories").get( fetchCategories);
 
-// Route to add a student to a course
-router.route("/:courseId/add-student").post( addStudentToCourse);
+
+// add student
+router.post("/:courseId/add-student", addStudentToCourse);
 
 export default router;

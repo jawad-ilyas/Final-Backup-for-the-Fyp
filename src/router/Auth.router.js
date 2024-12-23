@@ -1,11 +1,27 @@
 import { Router } from "express";
-import { registerUser, loginUser, fetchUsers, deleteUser } from "../controller/Auth.controllers.js";
+import {
+    registerUser,
+    loginUser
+} from "../controllers/Auth.controllers.js";
 
 const router = Router();
 
+/* -------------------------------------------------------------------------- */
+/*                             REGISTER USER                                  */
+/* -------------------------------------------------------------------------- */
+/**
+ * POST /api/v1/auth/registerUser
+ * Creates a new user
+ */
 router.route("/registerUser").post(registerUser);
+
+/* -------------------------------------------------------------------------- */
+/*                                LOGIN USER                                  */
+/* -------------------------------------------------------------------------- */
+/**
+ * POST /api/v1/auth/login
+ * Logs in an existing user
+ */
 router.route("/login").post(loginUser);
-router.route("/users").get(fetchUsers);
-router.route("/users/:id").delete(deleteUser);
 
 export default router;
