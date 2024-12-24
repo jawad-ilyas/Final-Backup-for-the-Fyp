@@ -31,6 +31,13 @@ const moduleSchema = new mongoose.Schema(
             ref: 'User',
             required: true,
         },
+        // Module schema snippet
+        questions: [
+            {
+                question: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
+                course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
+            }
+        ]
     },
     {
         timestamps: true,

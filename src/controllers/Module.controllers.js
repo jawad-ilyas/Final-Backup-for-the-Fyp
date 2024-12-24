@@ -111,7 +111,7 @@ export const deleteModule = asyncHandler(async (req, res) => {
 export const updateModule = asyncHandler(async (req, res) => {
     const { id } = req.params; // Module ID
     console.log("module id ", id);
-    const { title, description, startTime, endTime, teacherId , course } = req.body;
+    const { title, description, startTime, endTime, teacherId, course } = req.body;
     console.log("------------------------------")
     console.log("updateModule case")
     console.log("------------------------------")
@@ -154,4 +154,76 @@ export const updateModule = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(new ApiResponse(200, "Module updated successfully", updatedModule));
+});
+
+
+
+
+
+/**
+ * POST /api/v1/modules/:moduleId/add-questions
+ * Body: { courseId: "...", questionIds: [ "...", "..." ] }
+ * This pushes { question: questionId, course: courseId } into module.questions
+ */
+export const addQuestionsToModuleAndCourse = asyncHandler(async (req, res) => {
+    const { moduleId } = req.params;
+    const { courseId, questionIds } = req.body;
+
+    if (!courseId) {
+        throw new ApiError(400, "courseId is required");
+    }
+    if (!Array.isArray(questionIds) || questionIds.length === 0) {
+        throw new ApiError(400, "questionIds must be a non-empty array");
+    }
+
+    // Ensure the module exists
+    const module = await Module.findById(moduleId);
+    if (!module) {
+        throw new ApiError(404, "Module not found");
+    }
+
+    // Build the array of subdocuments we want to insert
+    const newEntries = questionIds.map((qId) => ({
+        question: qId,
+        course: courseId,
+    }));
+
+    // Use $addToSet.$each to add multiple items, skipping duplicates
+    await Module.updateOne(
+        { _id: moduleId },
+        {
+            $addToSet: {
+                questions: { $each: newEntries },
+            },
+        }
+    );
+
+    // (Optional) re-fetch the updated module to show new state
+    const updatedModule = await Module.findById(moduleId);
+
+    res
+        .status(200)
+        .json(new ApiResponse(200, "Questions added to module", updatedModule));
+});
+
+/**
+ * GET /api/v1/modules/:moduleId
+ * Populates the module's 'questions.question' field to show question details
+ */
+export const getModuleById = asyncHandler(async (req, res) => {
+    const { moduleId } = req.params;
+
+    // 1) Find the module by ID
+    //    Populate questions.question => so we see question "title", "difficulty", etc.
+    const module = await Module.findById(moduleId)
+        .populate("questions.question", "title difficulty category tags");
+
+    if (!module) {
+        throw new ApiError(404, "Module not found");
+    }
+
+    // Return the module doc with populated question data
+    res.status(200).json(
+        new ApiResponse(200, "Module fetched successfully", module)
+    );
 });
