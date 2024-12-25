@@ -1,10 +1,11 @@
-import { asyncHandler } from "../utilis/asyncHandler.utilis.js";
-import { ApiError } from "../utilis/ApiError.utilis.js";
-import { ApiResponse } from "../utilis/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import { ApiError } from "../utils/ApiError.utils.js";
+import { ApiResponse } from "../utils/ApiResponse.utils.js";
 import Course from "../models/Course.models.js";
 import User from "../models/User.models.js";
-import { uploadCloudinary } from "../utilis/Cloudinary.utilis.js";
-import { sendEnrollmentEmail } from "../utilis/email.util.js";
+import { uploadCloudinary } from "../utils/Cloudinary.utils.js";
+import { sendEnrollmentEmail } from "../utils/email.utils.js";
+import Module from "../models/Module.models.js";
 /* -------------------------------------------------------------------------- */
 /*                               CREATE COURSE                                */
 /* -------------------------------------------------------------------------- */
@@ -371,7 +372,7 @@ export const getEnrolledCourses = asyncHandler(async (req, res) => {
  * Returns an array of enrolled students for the given course
  */
 export const getEnrolledStudents = asyncHandler(async (req, res) => {
-    
+
     const { courseId } = req.params;
 
     const course = await Course.findById(courseId)
@@ -433,4 +434,25 @@ export const removeStudentFromCourse = asyncHandler(async (req, res) => {
             { courseId, studentId }
         )
     );
+});
+
+
+/**
+ * GET /api/v1/courses/:courseId/modules
+ * Return an array of modules for this course
+ */
+export const getCourseModules = asyncHandler(async (req, res) => {
+    const { courseId } = req.params;
+    // Optional: verify the student is enrolled in this course, or skip if not needed
+    console.log(courseId)
+    // fetch the modules referencing this course
+    const modules = await Module.find({ course: courseId }).lean();
+    // or .populate(...) if you want teacher or question info
+
+    // Optionally, if you want to attach a "questionsCount" field for each module:
+    // or just do a .map on modules to count module.questions.length if you store them in the module doc
+
+    res
+        .status(200)
+        .json(new ApiResponse(200, "Modules fetched successfully", modules));
 });

@@ -1,8 +1,10 @@
 import Module from "../models/Module.models.js";
-import { ApiResponse } from "../utilis/ApiResponse.js";
-import { asyncHandler } from "../utilis/asyncHandler.utilis.js";
-import { ApiError } from "../utilis/ApiError.utilis.js";
-
+import { ApiResponse } from "../utils/ApiResponse.utils.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import { ApiError } from "../utils/ApiError.utils.js";
+import PDFDocument from "pdfkit"; // npm install pdfkit
+import path from "path";
+import fs from "fs";
 /* -------------------------------------------------------------------------- */
 /*                             CREATE A NEW MODULE                            */
 /* -------------------------------------------------------------------------- */
@@ -226,4 +228,106 @@ export const getModuleById = asyncHandler(async (req, res) => {
     res.status(200).json(
         new ApiResponse(200, "Module fetched successfully", module)
     );
+});
+
+
+
+/**
+ * GET /api/v1/modules/:moduleId/download-questions?format=pdf
+ * or /download-questions?format=docx if you want docx
+ */
+export const downloadModuleQuestions = asyncHandler(async (req, res) => {
+    const { moduleId } = req.params;
+    const { format } = req.query; // e.g. "pdf" or "docx"
+
+    // find the module, populate questions
+    const module = await Module.findById(moduleId)
+        .populate("questions.question");
+    if (!module) {
+        throw new ApiError(404, "Module not found");
+    }
+
+    // If format === "pdf", we generate a PDF
+    if (format === "pdf") {
+        // create a new PDFDocument
+        const doc = new PDFDocument({ size: "A4", margin: 50 });
+
+        // set the response headers so the browser knows it's a file download
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="module_${moduleId}_questions.pdf"`
+        );
+
+        // pipe the PDF doc to the response
+        doc.pipe(res);
+
+        // Title
+        doc.fontSize(16).text(`Module: ${module.title}`, { underline: true });
+        doc.moveDown();
+
+        // For each question
+        module.questions.forEach((qObj, index) => {
+            const q = qObj.question;
+            doc.fontSize(14).text(`Question ${index + 1}: ${q.title}`, {
+                underline: true,
+            });
+            doc.moveDown(0.5);
+
+            // show problem statement or code
+            doc.fontSize(12).text(q.problemStatement || "No statement available.");
+            doc.moveDown(1.5);
+        });
+
+        doc.end(); // finalize the PDF
+    } else if (format === "docx") {
+        // do your .docx generation approach (like the docx library),
+        // then pipe or send the file. For brevity, we skip the example code
+        throw new ApiError(501, "DOCX generation not implemented yet.");
+    } else {
+        throw new ApiError(400, "Invalid format. Use ?format=pdf or ?format=docx");
+    }
+});
+
+
+/**
+ * POST /api/v1/modules/:moduleId/submit
+ * Body: { solutions: [ { questionId, code, text }, ... ] }
+ * We'll check if now <= endTime, else reject
+ */
+export const submitModuleSolutions = asyncHandler(async (req, res) => {
+    const { moduleId } = req.params;
+    const { solutions } = req.body; // an array of { questionId, code, text } or so
+
+    const module = await Module.findById(moduleId);
+    if (!module) {
+        throw new ApiError(404, "Module not found");
+    }
+
+    // Check time-bound
+    const now = new Date();
+    if (now > module.endTime) {
+        throw new ApiError(400, "Submission deadline has passed");
+    }
+    if (now < module.startTime) {
+        throw new ApiError(400, "Module hasn't started yet");
+    }
+
+    // store the student's solutions in DB
+    // you could do something like:
+    // const submission = new Submission({
+    //   module: moduleId,
+    //   student: req.user._id,
+    //   solutions,
+    //   submittedAt: now
+    // });
+    // await submission.save();
+
+    // or you might store them in module if you want, but that might not scale
+    // module.submissions.push({ student: req.user._id, solutions });
+    // await module.save();
+
+    res
+        .status(200)
+        .json(new ApiResponse(200, "Submission successful", { /* ... */ }));
 });

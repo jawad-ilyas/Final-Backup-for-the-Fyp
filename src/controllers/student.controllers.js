@@ -1,10 +1,11 @@
 // controllers/student.controllers.js
 
 import User from '../models/User.models.js';
-import { asyncHandler } from '../utilis/asyncHandler.utilis.js';
-import { ApiError } from '../utilis/ApiError.utilis.js';
-import { ApiResponse } from '../utilis/ApiResponse.js';
-
+import { asyncHandler } from '../utils/asyncHandler.utils.js';
+import { ApiError } from '../utils/ApiError.utils.js';
+import { ApiResponse } from '../utils/ApiResponse.utils.js';
+import Course from '../models/Course.models.js';
+import Module from '../models/Module.models.js';
 /* -------------------------------------------------------------------------- */
 /*                          GET STUDENT BY ID                                 */
 /* -------------------------------------------------------------------------- */
@@ -74,4 +75,59 @@ export const removeStudent = asyncHandler(async (req, res) => {
     // await student.save();
 
     res.status(200).json(new ApiResponse(200, 'Student removed successfully'));
+});
+
+
+
+
+/**
+ * GET /api/v1/student/courses
+ * Return an array of courses the student is enrolled in,
+ * each course object including 'enrolledCount' and 'modulesCount'.
+ */
+export const getStudentCourses = asyncHandler(async (req, res) => {
+    const studentId = req.user._id; // from token or session
+
+    // 1) find the student, including their .courses
+    const student = await User.findById(studentId).populate("courses");
+    if (!student) {
+        throw new ApiError(404, "Student not found");
+    }
+
+    // The courses we have here won't have sub-populate for teacher/enrolledStudents
+    // so let's get full course docs with deeper populates:
+    const courseIds = student.courses.map((c) => c._id);
+
+    // 2) fetch the actual course docs and populate what you need
+    const courses = await Course.find({ _id: { $in: courseIds } })
+        .populate("teacher", "name")         // teacher name
+        .populate("enrolledStudents", "_id") // just get IDs for enrolled
+    // .lean(); // optional
+
+    // 3) For each course, we'll count how many modules exist in the Modules collection
+    //    We'll do it in parallel with Promise.all for better performance
+    const modulesCounts = await Promise.all(
+        courses.map((course) => Module.countDocuments({ course: course._id }))
+    );
+
+    // 4) build the final array
+    const finalCourses = courses.map((course, idx) => {
+        const enrolledCount = course.enrolledStudents?.length || 0;
+        const modulesCount = modulesCounts[idx];
+
+        return {
+            _id: course._id,
+            name: course.name,
+            description: course.description,
+            imageUrl: course.imageUrl,
+            teacher: course.teacher, // e.g. { _id, name }
+            enrolledCount,
+            modulesCount,
+        };
+    });
+
+    // 5) return them
+    res.status(200).json(
+        new ApiResponse(200, "Enrolled courses with counts fetched", finalCourses)
+    );
 });

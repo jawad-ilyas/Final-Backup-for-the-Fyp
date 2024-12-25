@@ -42,6 +42,9 @@ const courseSchema = new mongoose.Schema(
         },
         // Students who are enrolled or pending
         enrolledStudents: [enrolledStudentSchema],
+        modules: [
+            { type: mongoose.Schema.Types.ObjectId, ref: "Module" }
+        ],
     },
     { timestamps: true }
 );

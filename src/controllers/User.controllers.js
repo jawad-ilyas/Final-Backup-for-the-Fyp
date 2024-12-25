@@ -1,9 +1,9 @@
 import User from "../models/User.models.js";
 import bcrypt from "bcryptjs";
 
-import { asyncHandler } from "../utilis/asyncHandler.utilis.js";
-import { ApiError } from "../utilis/ApiError.utilis.js";
-import { ApiResponse } from "../utilis/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import { ApiError } from "../utils/ApiError.utils.js";
+import { ApiResponse } from "../utils/ApiResponse.utils.js";
 
 /* -------------------------------------------------------------------------- */
 /*                          GET USER PROFILE                                  */

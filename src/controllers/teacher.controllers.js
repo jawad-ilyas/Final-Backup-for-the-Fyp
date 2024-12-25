@@ -1,8 +1,8 @@
 import User from "../models/User.models.js"; // or wherever your User model is
-import { asyncHandler } from "../utilis/asyncHandler.utilis.js";
-import { ApiError } from "../utilis/ApiError.utilis.js";
-import { ApiResponse } from "../utilis/ApiResponse.js";
-import { uploadCloudinary } from "../utilis/Cloudinary.utilis.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import { ApiError } from "../utils/ApiError.utils.js";
+import { ApiResponse } from "../utils/ApiResponse.utils.js";
+import { uploadCloudinary } from "../utils/Cloudinary.utils.js";
 
 /* -------------------------------------------------------------------------- */
 /*                        GET TEACHER BY ID (for Profile)                     */

@@ -1,6 +1,6 @@
 import User from "../models/User.models.js";
-import { ApiResponse } from "../utilis/ApiResponse.js";
-import { asyncHandler } from "../utilis/asyncHandler.utilis.js";
+import { ApiResponse } from "../utils/ApiResponse.utils.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
 import jwt from "jsonwebtoken";
 
 /* -------------------------------------------------------------------------- */
@@ -66,7 +66,8 @@ export const registerUser = asyncHandler(async (req, res) => {
  */
 export const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-
+    console.log("email " , email)
+    console.log("password " , password)
     const user = await User.findOne({ email });
     if (user && (await user.matchPassword(password))) {
         // Successful login

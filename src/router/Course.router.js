@@ -13,8 +13,10 @@ import {
     getEnrolledCourses,
     getCourseMates,
     getEnrolledStudents,
-    removeStudentFromCourse
+    removeStudentFromCourse,
+    getCourseModules
 } from "../controllers/Course.controllers.js";
+import { protect } from "../middleware/auth.middleware.js";
 
 const router = Router();
 // fetch categories
@@ -56,4 +58,6 @@ router.get("/:courseId/enrolled-students", getEnrolledStudents);
  * => removeStudentFromCourse
  */
 router.delete("/:courseId/enrolled-students/:studentId", removeStudentFromCourse);
+router.get("/:courseId/modules", getCourseModules);
+
 export default router;

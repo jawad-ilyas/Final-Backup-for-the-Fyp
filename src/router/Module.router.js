@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createModule, getModulesByCourse, deleteModule, updateModule, addQuestionsToModuleAndCourse, getModuleById } from "../controllers/Module.controllers.js";
+import { createModule, getModulesByCourse, deleteModule, updateModule, addQuestionsToModuleAndCourse, getModuleById, downloadModuleQuestions, submitModuleSolutions } from "../controllers/Module.controllers.js";
 
 const router = Router();
 
@@ -14,5 +14,12 @@ router.delete("/delete/:id", deleteModule);
 router.put("/update/:id", updateModule); // Add this line
 router.post("/:moduleId/add-questions", addQuestionsToModuleAndCourse);
 router.get("/:moduleId", getModuleById);
+// GET /api/v1/modules/:moduleId => getModuleById
 
+
+// GET /api/v1/modules/:moduleId/download-questions => downloadModuleQuestions
+router.get("/:moduleId/download-questions", downloadModuleQuestions);
+
+// POST /api/v1/modules/:moduleId/submit => submitModuleSolutions
+router.post("/:moduleId/submit", submitModuleSolutions);
 export default router;
