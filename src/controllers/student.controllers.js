@@ -131,3 +131,48 @@ export const getStudentCourses = asyncHandler(async (req, res) => {
         new ApiResponse(200, "Enrolled courses with counts fetched", finalCourses)
     );
 });
+
+// GET /api/v1/students/:studentId/stats
+
+export const getStudentProblemStats = asyncHandler(async (req, res) => {
+    const { studentId } = req.params;
+
+    // 1) Find the student
+    const student = await User.findById(studentId)
+        .populate("solvedQuestions.question", "difficulty")
+        .lean();
+
+    if (!student) {
+        throw new ApiError(404, "Student not found");
+    }
+
+    // 2) Compute how many are solved overall + distribution by difficulty
+    let totalSolved = 0;
+    let easyCount = 0;
+    let mediumCount = 0;
+    let hardCount = 0;
+
+    // student.solvedQuestions is an array of { question, solvedAt, ... }
+    totalSolved = student.solvedQuestions.length;
+
+    student.solvedQuestions.forEach((sq) => {
+        const diff = sq.question.difficulty; // "Easy" | "Medium" | "Hard"
+        if (diff === "Easy") easyCount++;
+        else if (diff === "Medium") mediumCount++;
+        else if (diff === "Hard") hardCount++;
+    });
+
+    // 3) (Optional) total # of questions in the entire DB
+    const totalQuestions = await Question.countDocuments();
+
+    // 4) Return stats
+    const stats = {
+        totalSolved,
+        easyCount,
+        mediumCount,
+        hardCount,
+        totalQuestions,
+    };
+
+    res.status(200).json(new ApiResponse(200, "Student stats fetched", stats));
+});

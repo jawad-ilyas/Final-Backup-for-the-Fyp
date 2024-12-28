@@ -446,7 +446,9 @@ export const getCourseModules = asyncHandler(async (req, res) => {
     // Optional: verify the student is enrolled in this course, or skip if not needed
     console.log(courseId)
     // fetch the modules referencing this course
-    const modules = await Module.find({ course: courseId }).lean();
+    const modules = await Module.find({ course: courseId })
+        .populate('course', 'name description') // Populate course name and description
+        .lean();
     // or .populate(...) if you want teacher or question info
 
     // Optionally, if you want to attach a "questionsCount" field for each module:

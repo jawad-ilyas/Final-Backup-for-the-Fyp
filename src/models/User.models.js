@@ -29,11 +29,10 @@ const userSchema = new mongoose.Schema(
             },
         ],
 
-        // NEW OPTIONAL FIELDS FOR TEACHER PROFILE
-      
+        // Optional fields for teacher profile
         imageUrl: {
             type: String,
-            default: '/images/default.jpg', // or null
+            default: '/images/default.jpg',
         },
         branding: {
             type: Boolean,
@@ -47,18 +46,66 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
-        gradeLevel : {
+        gradeLevel: {
             type: String,
             trim: true,
         },
-        major : {
+        major: {
             type: String,
             trim: true,
         },
+
         // Social links
         twitter: { type: String, trim: true },
         facebook: { type: String, trim: true },
         linkedin: { type: String, trim: true },
+
+        // NEW: Problem tracking
+        problemSets: [
+            {
+                courseId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Course',
+                    required: true,
+                },
+                problems: [
+                    {
+                        problemId: {
+                            type: mongoose.Schema.Types.ObjectId,
+                            ref: 'Problem', // Reference to a Problem model (if needed)
+                            required: true,
+                        },
+                        solved: {
+                            type: Boolean,
+                            default: false,
+                        },
+                        submissionTime: {
+                            type: Date,
+                        },
+                        attempts: {
+                            type: Number,
+                            default: 0,
+                        },
+                    },
+                ],
+            },
+        ],
+        // Track solved questions
+        solvedQuestions: [
+            {
+                question: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Question",
+                    required: true,
+                },
+                // Optional: store the date/time they solved it
+                solvedAt: {
+                    type: Date,
+                    default: Date.now,
+                },
+                // Optional: attempts, or best runtime, or other stats
+            },
+        ],
     },
     { timestamps: true }
 );
@@ -76,7 +123,6 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Example index if you often query by role
 userSchema.index({ role: 1 });
 
 const User = mongoose.model('User', userSchema);

@@ -5,6 +5,7 @@ import {
     updateStudent,
     removeStudent,
     getStudentCourses, // new controller
+    getStudentProblemStats,
 } from "../controllers/student.controllers.js";
 import { protect } from "../middleware/auth.middleware.js";
 // or any “studentCheck” middleware if you have role-based checks
@@ -30,5 +31,6 @@ router.put("/:id", updateStudent);
  * DELETE /api/v1/students/:id => removeStudent
  */
 router.delete("/:id", removeStudent);
+router.get('/:studentId/stats', getStudentProblemStats);
 
 export default router;

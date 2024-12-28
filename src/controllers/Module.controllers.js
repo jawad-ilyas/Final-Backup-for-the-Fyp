@@ -218,7 +218,7 @@ export const getModuleById = asyncHandler(async (req, res) => {
     // 1) Find the module by ID
     //    Populate questions.question => so we see question "title", "difficulty", etc.
     const module = await Module.findById(moduleId)
-        .populate("questions.question", "title difficulty category tags");
+        .populate("questions.question", "title difficulty category tags sampleTestCases teacher problemStatement" );
 
     if (!module) {
         throw new ApiError(404, "Module not found");
