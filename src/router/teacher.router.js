@@ -6,7 +6,7 @@ import {
     updateTeacherImage,    // PATCH /api/v1/teachers/:id/image
 } from "../controllers/teacher.controllers.js";
 import multer from "multer";
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: "/public/temp" });
 
 const router = Router();
 

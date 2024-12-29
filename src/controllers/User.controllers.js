@@ -152,3 +152,43 @@ export const getEnrolledCourses = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, "Fetched enrolled courses", user.courses));
 });
+
+/* -------------------------------------------------------------------------- */
+/*                         UPDATE TEACHER IMAGE ONLY                          */
+/* -------------------------------------------------------------------------- */
+/**
+ * PATCH /api/v1/teachers/:id/image
+ * Body: form-data with "image" file
+ */
+export const updateUserImage = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    // 1) Find teacher by ID
+    const user = await User.findById(id);
+    if (!user) {
+        throw new ApiError(404, "Teacher not found or user is not a user");
+    }
+
+    // 2) If no file, throw error
+    if (!req.file) {
+        throw new ApiError(400, "No image file provided");
+    }
+
+    // 3) Upload the image to Cloudinary (or your chosen service)
+    const uploaded = await uploadCloudinary(req.file.path);
+    if (!uploaded || !uploaded.url) {
+        throw new ApiError(500, "Image upload failed");
+    }
+
+    // 4) Update user’s imageUrl
+    user.imageUrl = uploaded.url;
+    const updatedTeacher = await user.save();
+
+    // 5) Respond with success
+    res.status(200).json(
+        new ApiResponse(200, "Teacher image updated successfully", {
+            _id: updatedTeacher._id,
+            imageUrl: updatedTeacher.imageUrl,
+        })
+    );
+});

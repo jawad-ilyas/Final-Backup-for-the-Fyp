@@ -46,12 +46,39 @@ export const updateStudent = asyncHandler(async (req, res) => {
     if (email !== undefined) student.email = email;
     if (password !== undefined) student.password = password; // triggers hashing in pre-save
 
-    const updatedStudent = await student.save();
-
-    res
-        .status(200)
-        .json(new ApiResponse(200, 'Student updated successfully', updatedStudent));
+    try {
+        const updatedStudent = await student.save();
+        res.status(200).json(new ApiResponse(200, 'Student updated successfully', updatedStudent));
+    } catch (err) {
+        if (err.name === 'ValidationError') {
+            // Customize the error response for validation errors
+            throw new ApiError(400, 'Validation failed', { errors: err.errors });
+        } else {
+            throw err;
+        }
+    }
 });
+
+// export const updateStudent = asyncHandler(async (req, res) => {
+//     const { id } = req.params;
+//     const { name, email, password } = req.body;
+
+//     const student = await User.findOne({ _id: id, role: 'student' });
+//     if (!student) {
+//         throw new ApiError(404, 'Student not found');
+//     }
+
+//     // Update fields if present
+//     if (name !== undefined) student.name = name;
+//     if (email !== undefined) student.email = email;
+//     if (password !== undefined) student.password = password; // triggers hashing in pre-save
+
+//     const updatedStudent = await student.save();
+
+//     res
+//         .status(200)
+//         .json(new ApiResponse(200, 'Student updated successfully', updatedStudent));
+// });
 
 /* -------------------------------------------------------------------------- */
 /*                          REMOVE STUDENT BY ID                              */
@@ -88,9 +115,10 @@ export const removeStudent = asyncHandler(async (req, res) => {
  */
 export const getStudentCourses = asyncHandler(async (req, res) => {
     const studentId = req.user._id; // from token or session
-
+    // console.log("get student courses for", studentId);
     // 1) find the student, including their .courses
     const student = await User.findById(studentId).populate("courses");
+    // console.log("student course in which that enrolled ", student)
     if (!student) {
         throw new ApiError(404, "Student not found");
     }

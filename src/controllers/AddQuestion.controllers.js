@@ -211,14 +211,17 @@ export const searchQuestions = asyncHandler(async (req, res) => {
  * Returns a list of unique categories and tags
  */
 export const getCategoriesAndTags = asyncHandler(async (req, res) => {
+    // Fetch unique categories
     const categories = await Question.distinct("category");
-    // 2) Unwind & group tags to ensure uniqueness
+
+    // Fetch and sort unique tags
     const tagsAgg = await Question.aggregate([
-        { $unwind: "$tags" },          // split each array item into its own doc
-        { $group: { _id: "$tags" } }, // group by the tag value
-        { $sort: { _id: 1 } },         // optional: sort alphabetically
+        { $unwind: "$tags" },          // Split each array item into its own doc
+        { $group: { _id: "$tags" } },  // Group by the tag value
+        { $sort: { _id: 1 } },         // Sort alphabetically (ascending)
     ]);
     const tags = tagsAgg.map((item) => item._id);
+
     res
         .status(200)
         .json(
@@ -228,6 +231,7 @@ export const getCategoriesAndTags = asyncHandler(async (req, res) => {
             })
         );
 });
+
 // export const getCategoriesAndTags = asyncHandler(async (req, res) => {
 //     const categories = await Question.distinct("category");
 //     const tags = await Question.distinct("tags");

@@ -6,9 +6,13 @@ import {
     deleteUser,
     getAllTeachers,
     getEnrolledCourses,
+    updateUserImage
 } from "../controllers/User.controllers.js";
 import {protect} from "../middleware/auth.middleware.js";
 const router = Router();
+import multer from "multer";
+
+const upload = multer({ dest: "/public/temp" });
 
 /* -------------------------------------------------------------------------- */
 /*                          GET USER PROFILE                                  */
@@ -55,5 +59,6 @@ router.delete("/:id", /* protect, adminCheck, */ deleteUser);
  */
 router.get("/teachers", /* protect, adminCheck, */ getAllTeachers);
 router.get("/courses",  getEnrolledCourses);
+router.patch("/:id/image", upload.single("image"), updateUserImage);
 
 export default router;

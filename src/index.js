@@ -12,6 +12,8 @@ import questionRouter from "./router/AddQuestion.router.js"; // Import Question 
 import teacherRoutes from "./router/teacher.router.js";
 import studentRoutes from './router/student.routes.js';
 import compilerRouter from "./router/compiler.routes.js"
+import errorMiddleware from './middleware/errorMiddleware.middleware.js';
+import submissionRoutes from "./router/submission.routes.js";
 
 dotenv.config({
     path: "./.env",
@@ -33,9 +35,12 @@ app.use("/api/v1/questions", questionRouter); // Add Question Router
 app.use("/api/v1/teachers", teacherRoutes);
 app.use('/api/v1/students', studentRoutes);
 app.use('/api/v1/compiler', compilerRouter);
+app.use("/api/v1/submissions", submissionRoutes);
+
+
 
 // Add module routes
-
+app.use(errorMiddleware);
 connectDb()
     .then(() => {
         app.on("Error", (Error) => {

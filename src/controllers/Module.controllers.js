@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.utils.js";
 import { asyncHandler } from "../utils/asyncHandler.utils.js";
 import { ApiError } from "../utils/ApiError.utils.js";
 import PDFDocument from "pdfkit"; // npm install pdfkit
+import User from "../models/User.models.js";
 import path from "path";
 import fs from "fs";
 /* -------------------------------------------------------------------------- */
@@ -218,7 +219,8 @@ export const getModuleById = asyncHandler(async (req, res) => {
     // 1) Find the module by ID
     //    Populate questions.question => so we see question "title", "difficulty", etc.
     const module = await Module.findById(moduleId)
-        .populate("questions.question", "title difficulty category tags sampleTestCases teacher problemStatement" );
+        .populate("questions.question", "title difficulty category tags sampleTestCases teacher problemStatement")
+        .populate("teacher", "name email");
 
     if (!module) {
         throw new ApiError(404, "Module not found");
@@ -229,6 +231,23 @@ export const getModuleById = asyncHandler(async (req, res) => {
         new ApiResponse(200, "Module fetched successfully", module)
     );
 });
+// export const getModuleById = asyncHandler(async (req, res) => {
+//     const { moduleId } = req.params;
+
+//     // 1) Find the module by ID
+//     //    Populate questions.question => so we see question "title", "difficulty", etc.
+//     const module = await Module.findById(moduleId)
+//         .populate("questions.question", "title difficulty category tags sampleTestCases teacher problemStatement" );
+
+//     if (!module) {
+//         throw new ApiError(404, "Module not found");
+//     }
+
+//     // Return the module doc with populated question data
+//     res.status(200).json(
+//         new ApiResponse(200, "Module fetched successfully", module)
+//     );
+// });
 
 
 

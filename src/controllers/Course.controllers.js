@@ -259,20 +259,22 @@ function generateRandomPassword(length = 12) {
 // POST /api/v1/courses/:courseId/add-student
 export const addStudentToCourse = asyncHandler(async (req, res) => {
     const { courseId } = req.params;
+    console.log("courseId", courseId)
     const { email, teacherId } = req.body;
-
-    console.log("[addStudentToCourse] courseId:", courseId, "email:", email, "teacherId:", teacherId);
+    console.log("email into the add student to course ", email)
+    console.log("teacherId into the add student to course ", teacherId)
+    // console.log("[addStudentToCourse] courseId:", courseId, "email:", email, "teacherId:", teacherId);
 
     // 1) Find course
     const course = await Course.findById(courseId);
     if (!course) {
         throw new ApiError(404, "Course not found");
     }
-
+    let password;
     // 2) If user doesn’t exist, create
     let user = await User.findOne({ email });
     if (!user) {
-        const password = generateRandomPassword(10); // 10-char password
+        password = generateRandomPassword(10); // 10-char password
 
         console.log("[addStudentToCourse] Creating new user with email:", email);
         user = await User.create({ email, role: "student", password });
@@ -282,6 +284,7 @@ export const addStudentToCourse = asyncHandler(async (req, res) => {
     const alreadyEnrolled = course.enrolledStudents.some(
         (enroll) => enroll.student.toString() === user._id.toString()
     );
+    console.log("alreadyEnrolled", alreadyEnrolled)
     if (alreadyEnrolled) {
         return res
             .status(200)
@@ -298,7 +301,7 @@ export const addStudentToCourse = asyncHandler(async (req, res) => {
     // sendEnrollmentEmail(email, course.name).catch(err => console.error(err));
     // optional
     try {
-        await sendEnrollmentEmail(email, course.name);
+        await sendEnrollmentEmail(email, course.name, password);
     } catch (emailErr) {
         console.error("Failed to send enrollment email:", emailErr);
     }
@@ -421,11 +424,11 @@ export const removeStudentFromCourse = asyncHandler(async (req, res) => {
     await course.save();
 
     // Optionally also remove the course from the user's 'courses' array
-    // let user = await User.findById(studentId);
-    // if (user) {
-    //   user.courses = user.courses.filter(c => c.toString() !== courseId);
-    //   await user.save();
-    // }
+    let user = await User.findById(studentId);
+    if (user) {
+        user.courses = user.courses.filter(c => c.toString() !== courseId);
+        await user.save();
+    }
 
     res.status(200).json(
         new ApiResponse(

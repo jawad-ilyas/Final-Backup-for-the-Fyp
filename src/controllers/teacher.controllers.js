@@ -63,6 +63,7 @@ export const updateTeacherProfile = asyncHandler(async (req, res) => {
     const updatableFields = [
         "name",
         "slug",
+        "bio",
         "branding",
         "reports",
         "includeInEmails",
