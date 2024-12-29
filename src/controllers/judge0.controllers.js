@@ -7,25 +7,36 @@ import axios from "axios";
 
 /**
  * POST /api/v1/compiler/run
- * Body: { code, language, stdin? } // optional single input
- * 
- * This uses RapidAPI's "judge029.p.rapidapi.com" endpoint with ?wait=true
- * for synchronous results. No multiple test-case loop.
+ * Body: {
+ *    code: string,
+ *    language: "cpp17" | "cpp14" | "c" | "python3" | "java",
+ *    testCases: [
+ *      { _id?: string, input: string, output: string },
+ *      { ... }
+ *    ]
+ * }
+ *
+ * This loops over the testCases array, calls Judge0 once per test case, 
+ * and compares actual vs. expected output.
  */
 export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
-    const { code, language, stdin } = req.body;
+    const { code, language, testCases } = req.body;
+
     if (!code) {
         throw new ApiError(400, "No code provided");
     }
 
-    // Suppose we only handle a few languages:
+    if (!testCases || !Array.isArray(testCases) || testCases.length === 0) {
+        throw new ApiError(400, "No test cases provided or invalid format");
+    }
+
+    // Map your desired language strings to Judge0's language_id
     const languageMap = {
         cpp14: 52,
         cpp17: 54,
         c: 50,
         python3: 71,
         java: 62,
-        // etc...
     };
 
     const langId = languageMap[language];
@@ -33,51 +44,72 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
         throw new ApiError(400, `Language '${language}' not supported in this demo`);
     }
 
-    // We'll just do ONE submission to Judge0:
     const judge0Url =
         "https://judge029.p.rapidapi.com/submissions?base64_encoded=false&wait=true&fields=*";
 
-    // Prepare the request body for Judge0
-    const submissionBody = {
-        source_code: code,    // If you want to pass base64, do base64_encoded=true & encode code
-        language_id: langId,
-        stdin: stdin || "",   // optional input
-    };
+    // We'll store each test case's results in this array
+    const results = [];
 
-    try {
-        // Call Judge0 once
-        const response = await axios.post(judge0Url, submissionBody, {
-            headers: {
-                "Content-Type": "application/json",
-                'x-rapidapi-key': '03792f3ef2msh0a399f9707481e0p161bd2jsnff0604eef7e1',
-                "x-rapidapi-host": "judge029.p.rapidapi.com",
-            },
-        });
+    for (const testCase of testCases) {
+        const { _id, input, output: expectedOutput } = testCase;
 
-        // Extract results
-        const { stdout, stderr, compile_output } = response.data;
+        // Prepare request body for Judge0
+        // We'll pass code + language_id + optional "stdin"
+        // so the user code can read from standard input
+        const submissionBody = {
+            source_code: code,
+            language_id: langId,
+            stdin: input, // pass the test case's input as stdin
+        };
 
-        let combinedOutput = "";
+        try {
+            const response = await axios.post(judge0Url, submissionBody, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-rapidapi-key": "YOUR_RAPIDAPI_KEY_HERE",   // replace with your key
+                    "x-rapidapi-host": "judge029.p.rapidapi.com", // or your judge0 host
+                },
+            });
 
-        if (compile_output) {
-            // compile error
-            combinedOutput += `Compile Error:\n${compile_output}\n`;
-        } else if (stderr) {
-            // runtime error
-            combinedOutput += `Runtime Error:\n${stderr}\n`;
-        } else {
-            // success => stdout is the code's output
-            combinedOutput += stdout || "";
+            // Judge0 returns fields like compile_output, stderr, stdout
+            const { stdout, stderr, compile_output } = response.data;
+
+            let combinedOutput = "";
+            let success = false;
+
+            if (compile_output) {
+                combinedOutput += `Compile Error:\n${compile_output}\n`;
+            } else if (stderr) {
+                combinedOutput += `Runtime Error:\n${stderr}\n`;
+            } else {
+                // No compile or runtime error => we have stdout
+                combinedOutput += stdout || "";
+                // Compare actual to expected
+                success = combinedOutput.trim() === (expectedOutput || "").trim();
+            }
+
+            results.push({
+                testCaseId: _id || null, // optional
+                input,
+                expectedOutput,
+                actualOutput: combinedOutput.trim(),
+                success,
+            });
+        } catch (err) {
+            // If Judge0 call fails or something else goes wrong
+            results.push({
+                testCaseId: _id || null,
+                input,
+                expectedOutput,
+                actualOutput: null,
+                success: false,
+                error: `Judge0 request failed: ${err.message}`,
+            });
         }
-
-        // Respond
-        res.status(200).json(
-            new ApiResponse(200, "Single-run code execution via Judge0", {
-                output: combinedOutput,
-            })
-        );
-    } catch (err) {
-        // If Judge0 request fails (403, 429, etc.)
-        throw new ApiError(500, `Judge0 request failed: ${err.message}`);
     }
+
+    // Return results array
+    res.status(200).json(
+        new ApiResponse(200, "Test case execution completed", { results })
+    );
 });

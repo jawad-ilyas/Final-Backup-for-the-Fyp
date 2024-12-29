@@ -22,7 +22,7 @@ import Question from "../models/AddQuestion.models.js";
  */
 export const createQuestion = asyncHandler(async (req, res) => {
     // Destructure fields from request body
-    const {
+    let {
         title,
         problemStatement,
         difficulty,
@@ -45,7 +45,11 @@ export const createQuestion = asyncHandler(async (req, res) => {
     if (!problemStatement)
         throw new ApiError(400, "Problem statement is required");
     if (!category) throw new ApiError(400, "Category is required");
-
+    // If `tags` is an array, clean them up
+    // e.g. turn ["  Array "," String ","Hash Table "] into ["array","string","hash table"]
+    if (Array.isArray(tags)) {
+        tags = tags.map((tag) => tag.trim().toLowerCase());
+    }
     // Build a question object
     const newQuestionData = {
         title,
@@ -100,7 +104,7 @@ export const getAllQuestions = asyncHandler(async (req, res) => {
  */
 export const getQuestionById = asyncHandler(async (req, res) => {
     const { id } = req.params;
-
+    console.log("question by id is called id ", id)
     const question = await Question.findById(id);
     if (!question) {
         throw new ApiError(404, "Question not found");
@@ -208,7 +212,13 @@ export const searchQuestions = asyncHandler(async (req, res) => {
  */
 export const getCategoriesAndTags = asyncHandler(async (req, res) => {
     const categories = await Question.distinct("category");
-    const tags = await Question.distinct("tags");
+    // 2) Unwind & group tags to ensure uniqueness
+    const tagsAgg = await Question.aggregate([
+        { $unwind: "$tags" },          // split each array item into its own doc
+        { $group: { _id: "$tags" } }, // group by the tag value
+        { $sort: { _id: 1 } },         // optional: sort alphabetically
+    ]);
+    const tags = tagsAgg.map((item) => item._id);
     res
         .status(200)
         .json(
@@ -218,6 +228,18 @@ export const getCategoriesAndTags = asyncHandler(async (req, res) => {
             })
         );
 });
+// export const getCategoriesAndTags = asyncHandler(async (req, res) => {
+//     const categories = await Question.distinct("category");
+//     const tags = await Question.distinct("tags");
+//     res
+//         .status(200)
+//         .json(
+//             new ApiResponse(200, "Fetched categories and tags", {
+//                 categories,
+//                 tags,
+//             })
+//         );
+// });
 
 /* -------------------------------------------------------------------------- */
 /*                           DELETE QUESTION BY ID                            */

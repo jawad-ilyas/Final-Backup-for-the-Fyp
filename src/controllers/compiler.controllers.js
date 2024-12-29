@@ -7,7 +7,9 @@ import path from "path";
 
 export const runStudentCode = asyncHandler(async (req, res) => {
     const { code, language, testCases } = req.body;
-
+    console.log("code", code);
+    console.log("language", language);
+    console.log("testCases", testCases);
     if (!code) {
         throw new ApiError(400, "No code provided");
     }

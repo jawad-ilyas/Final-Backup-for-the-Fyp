@@ -7,8 +7,13 @@ const TestCaseSchema = new mongoose.Schema({
 
 const questionSchema = new mongoose.Schema(
     {
-        title: { type: String, required: true },
-        problemStatement: { type: String, required: true },
+        title: {
+            type: String,
+            required: true,
+            trim: true, // Removes extra spaces
+            set: (value) => value.toLowerCase(), // Converts to lowercase
+        },
+        problemStatement: { type: String, required: true, trim: true },
         difficulty: {
             type: String,
             enum: ['Easy', 'Medium', 'Hard'],
@@ -16,27 +21,48 @@ const questionSchema = new mongoose.Schema(
         },
         sampleTestCases: [TestCaseSchema],
         hiddenTestCases: [TestCaseSchema],
-        tags: [{ type: String }],
-        // If each question belongs to a specific module
+        tags: [
+            {
+                type: String,
+                trim: true,
+                set: (value) => value.toLowerCase(), // Converts to lowercase
+            },
+        ],
         module: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Module',
         },
-        // If you also want to track which teacher created it
         teacher: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
         },
-        category: { type: String, required: true },
-        constraints: { type: String },
-        optimalSolution: { type: String },
-        complexity: {
-            time: { type: String },
-            space: { type: String },
+        category: {
+            type: String,
+            required: true,
+            trim: true,
+            set: (value) => value.toLowerCase(), // Converts to lowercase
         },
-        functionSignature: { type: String },
-        hints: [{ type: String }],
-        relatedQuestions: [{ type: String }],
+        constraints: { type: String, trim: true },
+        optimalSolution: { type: String, trim: true },
+        complexity: {
+            time: { type: String, trim: true },
+            space: { type: String, trim: true },
+        },
+        functionSignature: { type: String, trim: true },
+        hints: [
+            {
+                type: String,
+                trim: true,
+                set: (value) => value.toLowerCase(), // Converts to lowercase
+            },
+        ],
+        relatedQuestions: [
+            {
+                type: String,
+                trim: true,
+                set: (value) => value.toLowerCase(), // Converts to lowercase
+            },
+        ],
     },
     { timestamps: true }
 );

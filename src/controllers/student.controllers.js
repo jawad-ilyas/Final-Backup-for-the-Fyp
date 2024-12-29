@@ -6,6 +6,7 @@ import { ApiError } from '../utils/ApiError.utils.js';
 import { ApiResponse } from '../utils/ApiResponse.utils.js';
 import Course from '../models/Course.models.js';
 import Module from '../models/Module.models.js';
+import Question from '../models/AddQuestion.models.js';
 /* -------------------------------------------------------------------------- */
 /*                          GET STUDENT BY ID                                 */
 /* -------------------------------------------------------------------------- */
