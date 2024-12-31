@@ -9,22 +9,24 @@ const updateUserStats = async (studentId, solutions) => {
     let easyCount = 0;
     let mediumCount = 0;
     let hardCount = 0;
-
+    // console.log("solutions", solutions);
     // Iterate over submitted solutions and categorize by difficulty
     for (const sol of solutions) {
+        // console.log("i am working ont he solutions now", sol);
         const question = await Question.findById(sol.questionId);
         if (question) {
+            // console.log("i am working ont he question now", question);
             const { difficulty } = question;
-            if (sol.marksAwarded > 0) { // Only count if marks are awarded
-                if (difficulty === "Easy") easyCount++;
-                if (difficulty === "Medium") mediumCount++;
-                if (difficulty === "Hard") hardCount++;
-            }
+
+            if (difficulty === "Easy") easyCount++;
+            else if (difficulty === "Medium") mediumCount++;
+            else if (difficulty === "Hard") hardCount++;
+
         }
     }
 
     // Increment solved question stats in the User model
-    await User.findByIdAndUpdate(
+    const udpateUser = await User.findByIdAndUpdate(
         studentId,
         {
             $inc: {
@@ -36,6 +38,9 @@ const updateUserStats = async (studentId, solutions) => {
         },
         { new: true }
     );
+
+
+    console.log("udpateUser ", udpateUser)
 };
 
 // Controller: Submit a module
@@ -43,12 +48,12 @@ export const submitModule = async (req, res) => {
     const { moduleId, courseId, teacherId, solutions, maxTotalMarks = 10 } = req.body;
     const studentId = req.user._id;
 
-    console.log("moduleId", moduleId);
-    console.log("courseId", courseId);
-    console.log("teacherId", teacherId);
-    console.log("solutions", solutions);
-    console.log("maxTotalMarks", maxTotalMarks);
-    console.log("studentId", studentId);
+    // console.log("moduleId", moduleId);
+    // console.log("courseId", courseId);
+    // console.log("teacherId", teacherId);
+    // console.log("solutions", solutions);
+    // console.log("maxTotalMarks", maxTotalMarks);
+    // console.log("studentId", studentId);
 
     try {
         // Create submission
