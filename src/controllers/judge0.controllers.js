@@ -7,36 +7,25 @@ import axios from "axios";
 
 /**
  * POST /api/v1/compiler/run
- * Body: {
- *    code: string,
- *    language: "cpp17" | "cpp14" | "c" | "python3" | "java",
- *    testCases: [
- *      { _id?: string, input: string, output: string },
- *      { ... }
- *    ]
- * }
+ * Body: { code, language, testCases }
+ * - `code`: (optionally base64-encoded) C++ code
+ * - `language`: e.g. "cpp14" or "cpp17" if you want to differentiate
+ * - `testCases`: array of objects { input: "...", expected: "..." }
  *
- * This loops over the testCases array, calls Judge0 once per test case, 
- * and compares actual vs. expected output.
+ * This uses RapidAPI's "judge029.p.rapidapi.com" endpoint with wait=true
+ * for synchronous results.
  */
 export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
     const { code, language, testCases } = req.body;
-
     if (!code) {
         throw new ApiError(400, "No code provided");
     }
 
-    if (!testCases || !Array.isArray(testCases) || testCases.length === 0) {
-        throw new ApiError(400, "No test cases provided or invalid format");
-    }
-
-    // Map your desired language strings to Judge0's language_id
+    // Suppose we only handle C++14/17 via RapidAPI.
+    // For C++14, we typically pass language_id=52 to Judge0. For C++17 -> 54, etc.
     const languageMap = {
         cpp14: 52,
         cpp17: 54,
-        c: 50,
-        python3: 71,
-        java: 62,
     };
 
     const langId = languageMap[language];
@@ -44,72 +33,96 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
         throw new ApiError(400, `Language '${language}' not supported in this demo`);
     }
 
+    // We'll do a naive approach: for each testCase, we create a submission,
+    // then compare actual output with expected. We'll accumulate passCount, combinedOutput, etc.
+    let passCount = 0;
+    const totalCount = testCases?.length || 0;
+    let combinedOutput = "";
+
+    // 1) The base submission URL:
+    //    We include "?base64_encoded=true" only if your `code` is base64. 
+    //    Also "wait=true" means we'll get the result in one shot.
     const judge0Url =
         "https://judge029.p.rapidapi.com/submissions?base64_encoded=false&wait=true&fields=*";
 
-    // We'll store each test case's results in this array
-    const results = [];
-
-    for (const testCase of testCases) {
-        const { _id, input, output: expectedOutput } = testCase;
-
-        // Prepare request body for Judge0
-        // We'll pass code + language_id + optional "stdin"
-        // so the user code can read from standard input
-        const submissionBody = {
+    // 2) We'll define a helper function to call Judge0 for a single test case:
+    async function submitOneTestCase(input) {
+        // "source_code" is the code (base64 if you'd like).
+        // "stdin" is the input. 
+        // "language_id" is e.g. 52 for C++14
+        const body = {
             source_code: code,
             language_id: langId,
-            stdin: input, // pass the test case's input as stdin
+            stdin: input,
+            // You can also pass "expected_output" if you want Judge0 to compare automatically.
         };
 
+        // Make sure you use your actual RapidAPI key in the headers below:
+        const response = await axios.post(judge0Url, body, {
+            headers: {
+                "Content-Type": "application/json",
+                'x-rapidapi-key': '03792f3ef2msh0a399f9707481e0p161bd2jsnff0604eef7e1',
+                "x-rapidapi-host": "judge029.p.rapidapi.com",
+            },
+        });
+
+        return response.data;
+    }
+
+    // 3) For each test case
+    for (let i = 0; i < totalCount; i++) {
+        const input = testCases[i].input;
+        const expected = testCases[i].expected?.trim() || "";
+        // call Judge0
+        let outputText = "";
         try {
-            const response = await axios.post(judge0Url, submissionBody, {
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-rapidapi-key": "YOUR_RAPIDAPI_KEY_HERE",   // replace with your key
-                    "x-rapidapi-host": "judge029.p.rapidapi.com", // or your judge0 host
-                },
-            });
+            const result = await submitOneTestCase(input);
+            const { stdout, stderr, compile_output } = result;
 
-            // Judge0 returns fields like compile_output, stderr, stdout
-            const { stdout, stderr, compile_output } = response.data;
+            if (compile_output) {
+                // means compile error
+                outputText = `Compile Error:\n${compile_output}\n`;
+            } else if (stderr) {
+                // runtime error
+                outputText = `Runtime Error:\n${stderr}\n`;
+            } else {
+                // success => compare stdout with expected
+                const actual = (stdout || "").trim();
+                outputText = `Output: ${actual}\n`;
+                if (actual === expected) {
+                    passCount++;
+                }
+            }
+        } catch (err) {
+            outputText = `Judge0 Request Failed: ${err.message}\n`;
+        }
 
-            let combinedOutput = "";
-            let success = false;
+        combinedOutput += `Test #${i + 1}\nInput: ${input}\n${outputText}\n`;
+    }
 
+    // 4) if no testCases, just do a single run
+    if (totalCount === 0) {
+        try {
+            const result = await submitOneTestCase("");
+            const { stdout, stderr, compile_output } = result;
             if (compile_output) {
                 combinedOutput += `Compile Error:\n${compile_output}\n`;
             } else if (stderr) {
                 combinedOutput += `Runtime Error:\n${stderr}\n`;
             } else {
-                // No compile or runtime error => we have stdout
                 combinedOutput += stdout || "";
-                // Compare actual to expected
-                success = combinedOutput.trim() === (expectedOutput || "").trim();
             }
-
-            results.push({
-                testCaseId: _id || null, // optional
-                input,
-                expectedOutput,
-                actualOutput: combinedOutput.trim(),
-                success,
-            });
         } catch (err) {
-            // If Judge0 call fails or something else goes wrong
-            results.push({
-                testCaseId: _id || null,
-                input,
-                expectedOutput,
-                actualOutput: null,
-                success: false,
-                error: `Judge0 request failed: ${err.message}`,
-            });
+            combinedOutput += `Judge0 Request Failed: ${err.message}\n`;
         }
     }
 
-    // Return results array
+    // done
     res.status(200).json(
-        new ApiResponse(200, "Test case execution completed", { results })
+        new ApiResponse(200, "Code run with Judge0 via RapidAPI", {
+            output: combinedOutput,
+            passCount,
+            totalCount,
+        })
     );
 });

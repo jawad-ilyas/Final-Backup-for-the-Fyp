@@ -104,7 +104,7 @@ export const getAllQuestions = asyncHandler(async (req, res) => {
  */
 export const getQuestionById = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    console.log("question by id is called id ", id)
+
     const question = await Question.findById(id);
     if (!question) {
         throw new ApiError(404, "Question not found");

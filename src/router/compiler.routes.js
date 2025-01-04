@@ -8,6 +8,6 @@ const router = Router();
 
 // POST /api/v1/compiler/run
 // router.post("/run", protect, runStudentCode);
-router.post("/run", runStudentCodeJudge0);
+router.post("/run", runStudentCodeJudge0);  
 
 export default router;

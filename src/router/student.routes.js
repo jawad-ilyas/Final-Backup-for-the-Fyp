@@ -6,9 +6,13 @@ import {
     removeStudent,
     getStudentCourses, // new controller
     getStudentProblemStats,
+    getStudentProfile,
+    updateStudentProfileImage,
+    updateStudentProfile,
 } from "../controllers/student.controllers.js";
 import { protect } from "../middleware/auth.middleware.js";
 // or any “studentCheck” middleware if you have role-based checks
+import { upload } from "../middleware/multer.middleware.js";
 
 const router = Router();
 
@@ -32,5 +36,17 @@ router.put("/:id", updateStudent);
  */
 router.delete("/:id", removeStudent);
 router.get('/:studentId/stats', getStudentProblemStats);
+
+
+
+
+
+
+// * routes for the student  profile
+router.get("/:studentId/getStudentProfile", protect, getStudentProfile);
+router.post("/:studentId/updateStudentProfileImage", protect, upload.single("image"), updateStudentProfileImage);
+router.post("/:studentId/updateStudentProfile", protect, updateStudentProfile);
+
+
 
 export default router;

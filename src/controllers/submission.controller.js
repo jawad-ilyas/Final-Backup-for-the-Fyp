@@ -5,28 +5,44 @@ import User from "../models/User.models.js";
 
 
 // Helper: Update user stats for problem-solving progress
+// Helper: Update user stats for problem-solving progress
 const updateUserStats = async (studentId, solutions) => {
+    console.log(solutions)
     let easyCount = 0;
     let mediumCount = 0;
     let hardCount = 0;
-    // console.log("solutions", solutions);
+    const solvedQuestionIds = [];
+
+    // Fetch the user to check already solved questions
+    const user = await User.findById(studentId).select("solvedQuestions");
+    console.log(user, " into submit case ")
+
+    const alreadySolved = new Set(user.solvedQuestions.map((q) => q.question.toString()));
     // Iterate over submitted solutions and categorize by difficulty
     for (const sol of solutions) {
-        // console.log("i am working ont he solutions now", sol);
         const question = await Question.findById(sol.questionId);
+        console.log(question, "question")
         if (question) {
-            // console.log("i am working ont he question now", question);
             const { difficulty } = question;
 
+            // Skip if the question is already solved
+            if (alreadySolved.has(question._id.toString())) continue;
+
+            // Categorize question by difficulty
             if (difficulty === "Easy") easyCount++;
             else if (difficulty === "Medium") mediumCount++;
             else if (difficulty === "Hard") hardCount++;
 
+            // Add solved question ID to the array
+            solvedQuestionIds.push({
+                question: question._id,
+                solvedAt: new Date(),
+            });
         }
     }
 
-    // Increment solved question stats in the User model
-    const udpateUser = await User.findByIdAndUpdate(
+    // Increment solved question stats and update solvedQuestions array in the User model
+    const updatedUser = await User.findByIdAndUpdate(
         studentId,
         {
             $inc: {
@@ -35,25 +51,22 @@ const updateUserStats = async (studentId, solutions) => {
                 mediumCount,
                 hardCount,
             },
+            $addToSet: {
+                solvedQuestions: { $each: solvedQuestionIds }, // Add only unique questions
+            },
         },
         { new: true }
     );
 
-
-    console.log("udpateUser ", udpateUser)
+    console.log("Updated User:", updatedUser);
 };
+
 
 // Controller: Submit a module
 export const submitModule = async (req, res) => {
     const { moduleId, courseId, teacherId, solutions, maxTotalMarks = 10 } = req.body;
     const studentId = req.user._id;
 
-    // console.log("moduleId", moduleId);
-    // console.log("courseId", courseId);
-    // console.log("teacherId", teacherId);
-    // console.log("solutions", solutions);
-    // console.log("maxTotalMarks", maxTotalMarks);
-    // console.log("studentId", studentId);
 
     try {
         // Create submission
@@ -123,6 +136,7 @@ export const getSubmissionsByStudent = async (req, res) => {
 
 // Controller: Fetch single submission
 export const getSubmissionById = async (req, res) => {
+    console.log("submission by id is called for the fetching of th esubmission");
     try {
         const submission = await Submission.findById(req.params.id)
             .populate("course module teacher questions.question");
@@ -142,12 +156,16 @@ export const getSubmissionById = async (req, res) => {
 export const getSubmissionsByCourseAndStudent = async (req, res) => {
     const { courseId } = req.params; // Fetch course ID from URL params
     const studentId = req.user._id; // Fetch student ID from authenticated user
+    const { moduleId } = req.query;
+
+    console.log("submission by id is called for the fetching of th esubmission getSubmissionsByCourseAndStudent", moduleId);
 
     try {
-        const submissions = await Submission.find({ course: courseId, student: studentId })
+        const submissions = await Submission.find({ course: courseId, student: studentId, module: moduleId })
             .populate("course", "name description")
             .populate("module", "title description")
             .populate("teacher", "name email")
+            .populate("student", "name email totalSolved easyCount mediumCount hardCount")
             .populate("questions.question", "title difficulty sampleTestCases");
 
         if (!submissions || submissions.length === 0) {
@@ -169,3 +187,40 @@ export const getSubmissionsByCourseAndStudent = async (req, res) => {
         });
     }
 };
+
+
+
+// Controller: This controller handle the single question where user solve the problem for the practice case 
+export const submitSingleQuestion = async (req, res) => {
+    const { questionId, code, output } = req.body; // Expect single question data
+    const { studentId } = req.params;
+    console.log("studentId", studentId)
+    try {
+        // console.log(questionId, code, output, studentId);
+        // Validate input
+        if (!questionId) {
+            return res.status(400).json({
+                success: false,
+                message: "Question ID is required.",
+            });
+        }
+
+
+
+
+        // Update user stats for practicing
+        await updateUserStats(studentId, [{ questionId }]);
+
+
+
+        res.status(201).json({
+            success: true,
+            message: "Practice submission saved successfully!",
+            data: "Question submitted successfully!",
+        });
+    } catch (error) {
+        console.error("Error submitting question:", error);
+        res.status(500).json({ success: false, message: "Failed to save practice submission." });
+    }
+};
+

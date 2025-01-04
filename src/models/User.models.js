@@ -107,12 +107,30 @@ const userSchema = new mongoose.Schema(
                     type: Date,
                     default: Date.now,
                 },
-                // Optional: attempts, or best runtime, or other stats
             },
         ],
+
+        // Fields to track solved problems
+        totalSolved: {
+            type: Number,
+            default: 0,
+        },
+        easyCount: {
+            type: Number,
+            default: 0,
+        },
+        mediumCount: {
+            type: Number,
+            default: 0,
+        },
+        hardCount: {
+            type: Number,
+            default: 0,
+        },
     },
     { timestamps: true }
 );
+
 
 // Encrypt password before saving
 userSchema.pre('save', async function (next) {

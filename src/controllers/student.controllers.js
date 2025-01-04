@@ -1,4 +1,3 @@
-// controllers/student.controllers.js
 
 import User from '../models/User.models.js';
 import { asyncHandler } from '../utils/asyncHandler.utils.js';
@@ -7,6 +6,8 @@ import { ApiResponse } from '../utils/ApiResponse.utils.js';
 import Course from '../models/Course.models.js';
 import Module from '../models/Module.models.js';
 import Question from '../models/AddQuestion.models.js';
+import { uploadCloudinary } from "../utils/Cloudinary.utils.js";
+
 /* -------------------------------------------------------------------------- */
 /*                          GET STUDENT BY ID                                 */
 /* -------------------------------------------------------------------------- */
@@ -59,26 +60,7 @@ export const updateStudent = asyncHandler(async (req, res) => {
     }
 });
 
-// export const updateStudent = asyncHandler(async (req, res) => {
-//     const { id } = req.params;
-//     const { name, email, password } = req.body;
 
-//     const student = await User.findOne({ _id: id, role: 'student' });
-//     if (!student) {
-//         throw new ApiError(404, 'Student not found');
-//     }
-
-//     // Update fields if present
-//     if (name !== undefined) student.name = name;
-//     if (email !== undefined) student.email = email;
-//     if (password !== undefined) student.password = password; // triggers hashing in pre-save
-
-//     const updatedStudent = await student.save();
-
-//     res
-//         .status(200)
-//         .json(new ApiResponse(200, 'Student updated successfully', updatedStudent));
-// });
 
 /* -------------------------------------------------------------------------- */
 /*                          REMOVE STUDENT BY ID                              */
@@ -204,4 +186,106 @@ export const getStudentProblemStats = asyncHandler(async (req, res) => {
     };
 
     res.status(200).json(new ApiResponse(200, "Student stats fetched", stats));
+});
+
+
+
+
+// ---------- Controller for the Student Profie Show ---------------
+
+export const getStudentProfile = asyncHandler(async (req, res) => {
+
+    const { studentId } = req.params;
+    // console.log("getStudentProfile is called ")
+
+    const student = await User.findById(studentId)
+        .populate("courses", "name description")
+        .populate("solvedQuestions.question", "difficulty")
+        .lean();
+    // console.log("student profile ", student)
+    res.status(200).json(new ApiResponse(200, "Student stats fetched", student));
+
+});
+
+
+
+
+export const updateStudentProfileImage = asyncHandler(async (req, res) => {
+    const { studentId } = req.params;
+
+    // Validate the file exists
+    if (!req.file) {
+        throw new ApiError(400, "No image file uploaded.");
+    }
+
+    // Check if the student exists
+    const student = await User.findById(studentId);
+    if (!student) {
+        throw new ApiError(404, "Student not found");
+    }
+
+    // Upload the image to Cloudinary
+    const uploadedImage = await uploadCloudinary(req.file.path);
+    if (!uploadedImage || !uploadedImage.url) {
+        throw new ApiError(500, "Image upload to Cloudinary failed.");
+    }
+
+    // Update the student's profile image URL
+    student.imageUrl = uploadedImage.url;
+    const updatedStudent = await student.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Student profile image updated successfully.",
+        data: updatedStudent,
+    });
+});
+
+
+export const updateStudentProfile = asyncHandler(async (req, res) => {
+
+    console.log("called updateStudentProfile")
+    const { studentId: id } = req.params; // Alias studentId to id
+    console.log("id ", id)
+    const { name, email, password, major, twitter, linkedin, facebook, bio } = req.body;
+    // add a console .log for all  
+    console.log("name ", name)
+    console.log("email ", email)
+    console.log("password ", password)
+    console.log("major ", major)
+    console.log("twitter ", twitter)
+    console.log("linkedin ", linkedin)
+    console.log("facebook ", facebook)
+    console.log("bio ", bio)
+
+    const student = await User.findOne({ _id: id, role: 'student' });
+    if (!student) {
+        throw new ApiError(404, 'Student not found');
+    }
+
+    // Update fields if present
+    if (name !== undefined) student.name = name;
+    if (password !== undefined) student.password = password;
+    if (email !== undefined) student.email = email;
+    if (major !== undefined) student.major = major;
+    if (twitter !== undefined) student.twitter = twitter;
+    if (linkedin !== undefined) student.linkedin = linkedin;
+    if (facebook !== undefined) student.facebook = facebook;
+    if (bio !== undefined) student.bio = bio;
+    const updatedStudent = await student.save();
+
+    // Refetch the updated student data to include any required populated fields
+    const refreshedStudent = await User.findById(updatedStudent._id)
+        .populate("courses", "name")
+        .populate("solvedQuestions.question", "difficulty")
+        .lean();
+
+    res.status(200).json({
+        success: true,
+        message: "Student profile updated successfully.",
+        data: refreshedStudent, // Return the refreshed student object
+    });
+    res
+        .status(200)
+        .json(new ApiResponse(200, 'Student updated successfully', updatedStudent));
 });

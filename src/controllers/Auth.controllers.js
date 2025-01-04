@@ -65,9 +65,9 @@ export const registerUser = asyncHandler(async (req, res) => {
  * Verifies credentials. If valid, returns the user plus a JWT token.
  */
 export const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
-    console.log("email " , email)
-    console.log("password " , password)
+    const { email, password, role } = req.body;
+    console.log("email ", email)
+    console.log("password ", password)
     const user = await User.findOne({ email });
     if (user && (await user.matchPassword(password))) {
         // Successful login
