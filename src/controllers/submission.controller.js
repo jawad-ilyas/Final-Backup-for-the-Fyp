@@ -7,7 +7,7 @@ import User from "../models/User.models.js";
 // Helper: Update user stats for problem-solving progress
 // Helper: Update user stats for problem-solving progress
 const updateUserStats = async (studentId, solutions) => {
-    console.log(solutions)
+    // console.log(solutions)
     let easyCount = 0;
     let mediumCount = 0;
     let hardCount = 0;
@@ -69,6 +69,22 @@ export const submitModule = async (req, res) => {
 
 
     try {
+
+
+
+        // Check if the submission already exists
+        const existingSubmission = await Submission.findOne({
+            module: moduleId,
+            student: studentId,
+            course: courseId,
+        });
+
+        if (existingSubmission) {
+            return res.status(400).json({
+                success: false,
+                message: "You have already submitted this module.",
+            });
+        }
         // Create submission
         const submission = new Submission({
             course: courseId,
@@ -110,7 +126,7 @@ export const submitModule = async (req, res) => {
             data: populatedSubmission,
         });
     } catch (error) {
-        console.error("Error submitting module:", error);
+        // console.error("Error submitting module:", error);
         res.status(500).json({ success: false, message: "Failed to submit module." });
     }
 };
