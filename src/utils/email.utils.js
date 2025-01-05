@@ -82,7 +82,7 @@ export const sendEnrollmentEmail = async (studentEmail, courseName, password) =>
         <body>
             <div class="email-container">
                 <div class="header">
-                    <h1>Welcome to IEVC</h1>
+                    <h1>Welcome to IEFS</h1>
                 </div>
                 <div class="content">
                     <p>Hi there,</p>

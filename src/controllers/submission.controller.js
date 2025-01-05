@@ -240,3 +240,95 @@ export const submitSingleQuestion = async (req, res) => {
     }
 };
 
+
+// !---- controllers for the admin section + teacher section ----
+
+// Controller: Fetch submissions by teacher, course, and module
+export const getSubmissionsByTeacherCourseModule = async (req, res) => {
+    const { teacherId, courseId, moduleId } = req.params; // Extract from URL params
+
+    try {
+        // Validate input
+        if (!teacherId || !courseId || !moduleId) {
+            return res.status(400).json({
+                success: false,
+                message: "Teacher ID, Course ID, and Module ID are required.",
+            });
+        }
+
+        // Fetch submissions matching the criteria
+        const submissions = await Submission.find({
+            teacher: teacherId,
+            course: courseId,
+            module: moduleId,
+        })
+            .populate("student", "name email totalSolved easyCount mediumCount hardCount") // Populate student details
+            .populate("questions.question", "title difficulty sampleTestCases") // Populate question details
+            .populate("teacher", "name") // Populate question details
+            .populate("module", "title description") // Populate module details
+            .populate("course", "name description"); // Populate course details
+
+        // Check if submissions exist
+        if (!submissions || submissions.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No submissions found for the specified criteria.",
+            });
+        }
+
+        // Respond with the fetched submissions
+        res.status(200).json({
+            success: true,
+            data: submissions,
+        });
+    } catch (error) {
+        console.error("Error fetching submissions:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch submissions.",
+        });
+    }
+};
+
+
+export const deleteSubmission = async (req, res) => {
+    const { teacherId, studentId, courseId, moduleId } = req.params;
+
+    try {
+        // Validate input
+        if (!teacherId || !studentId || !courseId || !moduleId) {
+            return res.status(400).json({
+                success: false,
+                message: "Teacher ID, Student ID, Course ID, and Module ID are required.",
+            });
+        }
+
+        // Find the submission to delete
+        const submission = await Submission.findOneAndDelete({
+            teacher: teacherId,
+            student: studentId,
+            course: courseId,
+            module: moduleId,
+        });
+
+        // If no submission found
+        if (!submission) {
+            return res.status(404).json({
+                success: false,
+                message: "No submission found for the specified criteria.",
+            });
+        }
+
+        // Respond with success
+        res.status(200).json({
+            success: true,
+            message: "Submission deleted successfully.",
+        });
+    } catch (error) {
+        console.error("Error deleting submission:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete submission.",
+        });
+    }
+};

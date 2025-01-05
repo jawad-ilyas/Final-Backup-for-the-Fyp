@@ -137,7 +137,8 @@ export const deleteCourse = asyncHandler(async (req, res) => {
  *  (GET /api/v1/courses/all)
  */
 export const fetchAllCourses = asyncHandler(async (req, res) => {
-    const courses = await Course.find();
+    const courses = await Course.find()
+        .populate("teacher", "name email role");
     if (!courses || courses.length === 0) {
         return res
             .status(200)
