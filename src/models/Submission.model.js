@@ -18,6 +18,10 @@ const QuestionSubmissionSchema = new mongoose.Schema({
         type: Number, // Marks awarded for this question
         default: 0,
     },
+    eachQuestionMark: {
+        type: Number, // Marks awarded for this question
+        default: 0,
+    },
     remarks: {
         type: String, // Feedback or remarks for the question
     },

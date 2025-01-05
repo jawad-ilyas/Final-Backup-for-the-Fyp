@@ -7,6 +7,7 @@ import {
     submitSingleQuestion,
     getSubmissionsByTeacherCourseModule,
     deleteSubmission,
+    updateQuestionMarks,
 } from "../controllers/submission.controller.js";
 import { protect } from "../middleware/auth.middleware.js"; // Middleware for authentication
 
@@ -29,6 +30,11 @@ router.get(
 router.delete(
     "/submissions/:teacherId/:studentId/:courseId/:moduleId",
     deleteSubmission
+);
+
+router.patch(
+    "/:submissionId/questions/:questionId",
+    updateQuestionMarks
 );
 
 export default router;

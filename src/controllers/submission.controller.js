@@ -1,7 +1,7 @@
 import Submission from "../models/Submission.model.js";
 import Question from "../models/AddQuestion.models.js";
 import User from "../models/User.models.js";
-
+import Module from "../models/Module.models.js";
 
 
 // Helper: Update user stats for problem-solving progress
@@ -15,13 +15,13 @@ const updateUserStats = async (studentId, solutions) => {
 
     // Fetch the user to check already solved questions
     const user = await User.findById(studentId).select("solvedQuestions");
-    console.log(user, " into submit case ")
+    // console.log(user, " into submit case ")
 
     const alreadySolved = new Set(user.solvedQuestions.map((q) => q.question.toString()));
     // Iterate over submitted solutions and categorize by difficulty
     for (const sol of solutions) {
         const question = await Question.findById(sol.questionId);
-        console.log(question, "question")
+        // console.log(question, "question")
         if (question) {
             const { difficulty } = question;
 
@@ -58,21 +58,18 @@ const updateUserStats = async (studentId, solutions) => {
         { new: true }
     );
 
-    console.log("Updated User:", updatedUser);
+    // console.log("Updated User:", updatedUser);
 };
 
 
-// Controller: Submit a module
 export const submitModule = async (req, res) => {
-    const { moduleId, courseId, teacherId, solutions, maxTotalMarks = 10 } = req.body;
+    console.log("Submit Module - Started");
+    const { moduleId, courseId, teacherId, solutions } = req.body;
     const studentId = req.user._id;
 
-
     try {
-
-
-
         // Check if the submission already exists
+        console.log("Checking for existing submission...");
         const existingSubmission = await Submission.findOne({
             module: moduleId,
             student: studentId,
@@ -80,39 +77,60 @@ export const submitModule = async (req, res) => {
         });
 
         if (existingSubmission) {
+            console.log("Existing submission found for module:", moduleId);
             return res.status(400).json({
                 success: false,
                 message: "You have already submitted this module.",
             });
         }
-        // Create submission
+
+        console.log("Creating new submission...");
+        const questions = solutions.map((sol) => {
+            const maxMarks = sol.marks; // Max marks for the question
+            if (!maxMarks || maxMarks <= 0) {
+                throw new Error(`Invalid marks for question: ${sol.questionId}`);
+            }
+
+            const awardedMarks = Math.min(Math.floor(Math.random() * maxMarks) + 1, maxMarks); // Random marks <= maxMarks
+            console.log(
+                `Question: ${sol.questionId}, Max Marks: ${maxMarks}, Awarded Marks: ${awardedMarks}`
+            );
+
+            return {
+                question: sol.questionId,
+                code: sol.code || "// No code provided",
+                output: sol.output || "No output generated",
+                eachQuestionMark: sol.marks,
+                marksAwarded: awardedMarks,
+                remarks: "Good attempt. Keep improving!",
+                correctSolution: "// Correct solution placeholder",
+                aiFeedback: "Focus on edge cases and complexity.",
+            };
+        });
+
+        const maxTotalMarks = questions.reduce((sum, question) => sum + question.marksAwarded, 0);
+        const totalMarks = solutions.reduce((sum, sol) => sum + sol.marks, 0); // Sum of the `marks` key
+
+        console.log(`Total Marks Awarded: ${totalMarks}`);
+        console.log(`Maximum Total Marks: ${maxTotalMarks}`);
+
         const submission = new Submission({
             course: courseId,
             module: moduleId,
             teacher: teacherId,
             student: studentId,
-            questions: solutions.map((sol) => {
-                const randomMarks = Math.floor(Math.random() * 10) + 1; // Random marks (1-10)
-                return {
-                    question: sol.questionId,
-                    code: sol.code || "// No code provided",
-                    output: sol.output || "No output generated",
-                    marksAwarded: randomMarks,
-                    remarks: "Good attempt. Keep improving!", // Fixed placeholder remarks
-                    correctSolution: "// Correct solution placeholder", // Placeholder for correct solution
-                    aiFeedback: "Focus on edge cases and complexity.", // Placeholder AI feedback
-                };
-            }),
-            totalMarks: solutions.reduce((sum) => sum + Math.floor(Math.random() * 10) + 1, 0), // Sum of random marks
+            questions,
+            totalMarks,
             maxTotalMarks,
         });
 
+        console.log("Saving submission...");
         const savedSubmission = await submission.save();
 
-        // Update user stats
+        console.log("Updating user stats...");
         await updateUserStats(studentId, solutions);
 
-        // Populate fields for the response
+        console.log("Populating submission fields...");
         const populatedSubmission = await Submission.findById(savedSubmission._id)
             .populate("course")
             .populate("module")
@@ -120,16 +138,20 @@ export const submitModule = async (req, res) => {
             .populate("student")
             .populate("questions.question");
 
+        console.log("Submission created successfully!");
         res.status(201).json({
             success: true,
             message: "Submission created successfully!",
             data: populatedSubmission,
         });
     } catch (error) {
-        // console.error("Error submitting module:", error);
-        res.status(500).json({ success: false, message: "Failed to submit module." });
+        console.error("Error submitting module:", error.message);
+        res.status(500).json({ success: false, message: error.message || "Failed to submit module." });
     }
 };
+
+
+
 
 
 // Controller: Fetch submissions for a student
@@ -152,7 +174,7 @@ export const getSubmissionsByStudent = async (req, res) => {
 
 // Controller: Fetch single submission
 export const getSubmissionById = async (req, res) => {
-    console.log("submission by id is called for the fetching of th esubmission");
+    // console.log("submission by id is called for the fetching of th esubmission");
     try {
         const submission = await Submission.findById(req.params.id)
             .populate("course module teacher questions.question");
@@ -174,7 +196,7 @@ export const getSubmissionsByCourseAndStudent = async (req, res) => {
     const studentId = req.user._id; // Fetch student ID from authenticated user
     const { moduleId } = req.query;
 
-    console.log("submission by id is called for the fetching of th esubmission getSubmissionsByCourseAndStudent", moduleId);
+    // console.log("submission by id is called for the fetching of th esubmission getSubmissionsByCourseAndStudent", moduleId);
 
     try {
         const submissions = await Submission.find({ course: courseId, student: studentId, module: moduleId })
@@ -210,7 +232,7 @@ export const getSubmissionsByCourseAndStudent = async (req, res) => {
 export const submitSingleQuestion = async (req, res) => {
     const { questionId, code, output } = req.body; // Expect single question data
     const { studentId } = req.params;
-    console.log("studentId", studentId)
+    // console.log("studentId", studentId)
     try {
         // console.log(questionId, code, output, studentId);
         // Validate input
@@ -256,6 +278,17 @@ export const getSubmissionsByTeacherCourseModule = async (req, res) => {
             });
         }
 
+        // Fetch the module to get the max marks for each question
+        const module = await Module.findById(moduleId).populate("questions.question", "marks title");
+
+        if (!module) {
+            return res.status(404).json({
+                success: false,
+                message: "Module not found.",
+            });
+        }
+
+
         // Fetch submissions matching the criteria
         const submissions = await Submission.find({
             teacher: teacherId,
@@ -264,11 +297,10 @@ export const getSubmissionsByTeacherCourseModule = async (req, res) => {
         })
             .populate("student", "name email totalSolved easyCount mediumCount hardCount") // Populate student details
             .populate("questions.question", "title difficulty sampleTestCases") // Populate question details
-            .populate("teacher", "name") // Populate question details
+            .populate("teacher", "name") // Populate teacher details
             .populate("module", "title description") // Populate module details
             .populate("course", "name description"); // Populate course details
 
-        // Check if submissions exist
         if (!submissions || submissions.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -276,10 +308,33 @@ export const getSubmissionsByTeacherCourseModule = async (req, res) => {
             });
         }
 
-        // Respond with the fetched submissions
+        // Add marks for each question and compute total marks obtained
+        const enrichedSubmissions = submissions.map((submission) => {
+            const questionsWithMarks = submission.questions.map((q) => {
+                const maxMarks = module.questions.find(
+                    (moduleQuestion) =>
+                        moduleQuestion.question.toString() === q.question._id.toString()
+                )?.eachQuestionMark;
+                console.log(maxMarks)
+                return {
+                    ...q.toObject(),
+                    maxMarks: maxMarks || 0, // Include max marks from the module
+                };
+            });
+
+
+
+            return {
+                ...submission.toObject(),
+                questions: questionsWithMarks, // Include questions with max marks
+
+            };
+        });
+
+        // Respond with enriched submissions
         res.status(200).json({
             success: true,
-            data: submissions,
+            data: enrichedSubmissions,
         });
     } catch (error) {
         console.error("Error fetching submissions:", error);
@@ -329,6 +384,97 @@ export const deleteSubmission = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to delete submission.",
+        });
+    }
+};
+
+
+// Controller: Update Marks for a Single Question in Submission
+
+export const updateQuestionMarks = async (req, res) => {
+    const { submissionId, questionId } = req.params;
+    const { marksAwarded } = req.body;
+
+    console.log("Request received to update marks for submission:", submissionId, "and question:", questionId);
+    console.log("Marks to be awarded:", marksAwarded);
+
+    try {
+        // Validate marksAwarded input
+        if (marksAwarded < 0) {
+            console.log("Validation failed: Marks cannot be negative.");
+            return res.status(400).json({
+                success: false,
+                message: "Marks cannot be negative.",
+            });
+        }
+
+        // Find the submission
+        console.log("Searching for submission with ID:", submissionId);
+        const submission = await Submission.findById(submissionId);
+        if (!submission) {
+            console.log("Submission not found with ID:", submissionId);
+            return res.status(404).json({
+                success: false,
+                message: "Submission not found.",
+            });
+        }
+
+        // Find the specific question in the submission
+        console.log("Searching for question in submission...");
+        const questionToUpdate = submission.questions.find(
+            (q) => q.question.toString() === questionId
+        );
+
+        if (!questionToUpdate) {
+            console.log("Question not found with ID:", questionId, "in submission:", submissionId);
+            return res.status(404).json({
+                success: false,
+                message: "Question not found in the submission.",
+            });
+        }
+
+        // Ensure the marks awarded do not exceed the maximum allowed marks for the question
+        console.log("Validating marks awarded against maximum allowed marks...");
+        if (marksAwarded > questionToUpdate.eachQuestionMark) {
+            console.log(
+                `Validation failed: Marks awarded (${marksAwarded}) exceed the maximum allowed marks (${questionToUpdate.eachQuestionMark}).`
+            );
+            return res.status(400).json({
+                success: false,
+                message: `Marks awarded cannot exceed the maximum allowed marks of ${questionToUpdate.eachQuestionMark}.`,
+            });
+        }
+
+        // Update marks
+        console.log("Updating marks for question:", questionId, "in submission:", submissionId);
+        questionToUpdate.marksAwarded = marksAwarded;
+
+        // Recalculate totalMarks and maxTotalMarks for the submission
+        console.log("Recalculating totalMarks and maxTotalMarks for the submission...");
+        submission.totalMarks = submission.questions.reduce(
+            (sum, question) => sum + question.eachQuestionMark, 
+            0
+        );
+        submission.maxTotalMarks = submission.questions.reduce(
+            (sum, question) => sum + question.marksAwarded,
+            0
+        );
+
+        // Save the updated submission
+        console.log("Saving the updated submission...");
+        await submission.save();
+
+        console.log("Marks updated successfully for question:", questionId);
+        res.status(200).json({
+            success: true,
+            message: "Marks updated successfully.",
+            data: submission,
+        });
+    } catch (error) {
+        console.error("Error updating question marks:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to update question marks.",
         });
     }
 };

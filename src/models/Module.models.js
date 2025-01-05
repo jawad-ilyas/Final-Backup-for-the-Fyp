@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const moduleSchema = new mongoose.Schema(
     {
@@ -21,23 +21,21 @@ const moduleSchema = new mongoose.Schema(
         },
         course: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Course',
+            ref: "Course",
             required: true,
         },
-        // If modules can have different teachers than the main course teacher:
-        // Or you can rely on course.teacher to determine ownership
         teacher: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+            ref: "User",
             required: true,
         },
-        // Module schema snippet
         questions: [
             {
                 question: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
                 course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
-            }
-        ]
+                marks: { type: Number, default: 0 },
+            },
+        ],
     },
     {
         timestamps: true,
@@ -46,5 +44,5 @@ const moduleSchema = new mongoose.Schema(
 
 moduleSchema.index({ course: 1, startTime: 1 }); // Example composite index
 
-const Module = mongoose.model('Module', moduleSchema);
+const Module = mongoose.model("Module", moduleSchema);
 export default Module;
