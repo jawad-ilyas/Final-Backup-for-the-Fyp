@@ -30,9 +30,29 @@ const generateToken = (id) => {
 export const registerUser = asyncHandler(async (req, res) => {
     const { email, password, name, role } = req.body;
 
-    // Check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
+    // Validate password length
+    if (!password || password.length < 6) {
+        return res
+            .status(400)
+            .json(new ApiResponse(400, "Password must be at least 6 characters long"));
+    }
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        // Check if email is associated with a different role
+        if (existingUser.role !== role) {
+            return res
+                .status(400)
+                .json(
+                    new ApiResponse(
+                        400,
+                        `The email "${email}" is already registered with the role "${existingUser.role}". Please use a different email or contact support.`
+                    )
+                );
+        }
+
+        // If same role, return a general error
         return res
             .status(400)
             .json(new ApiResponse(400, "User already exists"));
