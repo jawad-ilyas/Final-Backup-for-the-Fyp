@@ -72,7 +72,7 @@ export const createModule = asyncHandler(async (req, res) => {
 export const getModulesByCourse = asyncHandler(async (req, res) => {
     const { courseId } = req.params;
     const { teacher } = req.query; // replaced teacherId with teacher
-
+    console.log("teacher id into getModulesByCourse", teacher);
     // Validate required fields
     if (!teacher) {
         throw new ApiError(400, "Teacher ID is required");

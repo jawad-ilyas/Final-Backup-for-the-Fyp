@@ -46,12 +46,9 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     const { name, password } = req.body;
 
     if (name) user.name = name;
-    if (password) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(password, salt);
-    }
+    if (password) user.password = password; // Pre-save middleware will handle hashing
 
-    const updatedUser = await user.save();
+    const updatedUser = await user.save(); // Trigger the pre-save middleware
 
     res.status(200).json(
         new ApiResponse(200, "User profile updated successfully", {
@@ -61,6 +58,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
         })
     );
 });
+
 
 /* -------------------------------------------------------------------------- */
 /*                                FETCH USERS                                 */
