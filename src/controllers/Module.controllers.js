@@ -21,7 +21,16 @@ import fs from "fs";
  */
 export const createModule = asyncHandler(async (req, res) => {
     const { title, description, startTime, endTime, courseId, teacherId } = req.body;
-    console.log("title", title, "description", description, "startTime", startTime, "endTime", endTime, "courseId", courseId, "teacherId", teacherId);
+
+    console.log(
+        "title", title,
+        "description", description,
+        "startTime", startTime,
+        "endTime", endTime,
+        "courseId", courseId,
+        "teacherId", teacherId
+    );
+
     // Validate required fields
     if (!title || !description || !startTime || !endTime || !courseId || !teacherId) {
         throw new ApiError(400, "All fields are required");
@@ -30,6 +39,12 @@ export const createModule = asyncHandler(async (req, res) => {
     // Validate time
     if (new Date(startTime) >= new Date(endTime)) {
         throw new ApiError(400, "Start time must be before end time");
+    }
+
+    // Check if a module with the same title already exists for the course
+    const existingModule = await Module.findOne({ title, course: courseId });
+    if (existingModule) {
+        throw new ApiError(400, `A module with the title "${title}" already exists for this course`);
     }
 
     // Create and save the module
@@ -42,9 +57,7 @@ export const createModule = asyncHandler(async (req, res) => {
         teacher: teacherId,
     });
 
-    res
-        .status(201)
-        .json(new ApiResponse(201, "Module created successfully", newModule));
+    res.status(201).json(new ApiResponse(201, "Module created successfully", newModule));
 });
 
 /* -------------------------------------------------------------------------- */
