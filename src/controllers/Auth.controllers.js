@@ -97,6 +97,7 @@ export const loginUser = asyncHandler(async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                imageUrl: user.imageUrl,
                 token: generateToken(user._id),
             })
         );

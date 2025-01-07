@@ -6,9 +6,10 @@ import {
     deleteUser,
     getAllTeachers,
     getEnrolledCourses,
-    updateUserImage
+    updateUserImage,
+    updateUserProfileImage
 } from "../controllers/User.controllers.js";
-import {protect} from "../middleware/auth.middleware.js";
+import { protect } from "../middleware/auth.middleware.js";
 const router = Router();
 import multer from "multer";
 
@@ -30,7 +31,7 @@ router.get("/profile", protect, getUserProfile);
  * PUT /api/v1/user/profile
  * Updates the logged-in user's profile
  */
-router.put("/profile",  protect, updateUserProfile);
+router.put("/profile", protect, updateUserProfile);
 
 /* -------------------------------------------------------------------------- */
 /*                            FETCH ALL USERS                                 */
@@ -58,7 +59,8 @@ router.delete("/:id", /* protect, adminCheck, */ deleteUser);
  * Returns all teachers (admin only)
  */
 router.get("/teachers", /* protect, adminCheck, */ getAllTeachers);
-router.get("/courses",  getEnrolledCourses);
+router.get("/courses", getEnrolledCourses);
 router.patch("/:id/image", upload.single("image"), updateUserImage);
+router.post("/:id/updateUserProfileImage", protect, upload.single("image"), updateUserProfileImage);
 
 export default router;

@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { asyncHandler } from "../utils/asyncHandler.utils.js";
 import { ApiError } from "../utils/ApiError.utils.js";
 import { ApiResponse } from "../utils/ApiResponse.utils.js";
-
+import { uploadCloudinary } from "../utils/Cloudinary.utils.js";
 /* -------------------------------------------------------------------------- */
 /*                          GET USER PROFILE                                  */
 /* -------------------------------------------------------------------------- */
@@ -37,6 +37,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
  * If a new password is provided, it gets hashed before saving.
  */
 export const updateUserProfile = asyncHandler(async (req, res) => {
+    console.log("update user profile is called , properly ")
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -44,7 +45,8 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     }
 
     const { name, password } = req.body;
-
+    console.log("name is ", name)
+    console.log("password is ", password)
     if (name) user.name = name;
     if (password) user.password = password; // Pre-save middleware will handle hashing
 
@@ -190,3 +192,41 @@ export const updateUserImage = asyncHandler(async (req, res) => {
         })
     );
 });
+
+
+
+
+
+
+
+export const updateUserProfileImage = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    // Validate the file exists
+    if (!req.file) {
+        throw new ApiError(400, "No image file uploaded.");
+    }
+
+    // Check if the student exists
+    const student = await User.findById(id);
+    if (!student) {
+        throw new ApiError(404, "Student not found");
+    }
+
+    // Upload the image to Cloudinary
+    const uploadedImage = await uploadCloudinary(req.file.path);
+    if (!uploadedImage || !uploadedImage.url) {
+        throw new ApiError(500, "Image upload to Cloudinary failed.");
+    }
+
+    // Update the student's profile image URL
+    student.imageUrl = uploadedImage.url;
+    const updatedStudent = await student.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Student profile image updated successfully.",
+        data: updatedStudent,
+    });
+});
+
