@@ -366,3 +366,48 @@ export const submitModuleSolutions = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, "Submission successful", { /* ... */ }));
 });
+
+
+
+export const deleteQuestionFromModule = async (req, res) => {
+    const { moduleId, questionId } = req.params;
+
+    try {
+        // Find the module
+        const module = await Module.findById(moduleId);
+
+        if (!module) {
+            throw new ApiError(404, "Module not found");
+        }
+
+        // Find and remove the question from the module's questions array
+        const questionIndex = module.questions.findIndex(
+            (q) => q.question.toString() === questionId
+        );
+
+        if (questionIndex === -1) {
+            throw new ApiError(404, "Question not found in the module");
+        }
+
+        module.questions.splice(questionIndex, 1);
+
+        // Save the updated module
+        await module.save();
+
+        res.status(200).json(
+            new ApiResponse(200, "Question removed successfully", {
+                moduleId,
+                questionId,
+            })
+        );
+    } catch (error) {
+        console.error("Error removing question from module:", error);
+        res.status(error.statusCode || 500).json(
+            new ApiResponse(
+                error.statusCode || 500,
+                error.message || "Failed to remove the question",
+                []
+            )
+        );
+    }
+};

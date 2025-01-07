@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createModule, getModulesByCourse, deleteModule, updateModule, addQuestionsToModuleAndCourse, getModuleById, downloadModuleQuestions, submitModuleSolutions } from "../controllers/Module.controllers.js";
+import { createModule, getModulesByCourse, deleteModule, updateModule, addQuestionsToModuleAndCourse, getModuleById, downloadModuleQuestions, submitModuleSolutions, deleteQuestionFromModule } from "../controllers/Module.controllers.js";
 
 const router = Router();
 
@@ -22,4 +22,8 @@ router.get("/:moduleId/download-questions", downloadModuleQuestions);
 
 // POST /api/v1/modules/:moduleId/submit => submitModuleSolutions
 router.post("/:moduleId/submit", submitModuleSolutions);
+
+// router for the delete question from the module
+router.delete("/:moduleId/questions/:questionId", deleteQuestionFromModule);
+
 export default router;
