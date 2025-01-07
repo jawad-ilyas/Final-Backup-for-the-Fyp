@@ -51,12 +51,13 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     if (password) user.password = password; // Pre-save middleware will handle hashing
 
     const updatedUser = await user.save(); // Trigger the pre-save middleware
-
+    console.log("updatedUser into update user profile controller ", updatedUser)
     res.status(200).json(
         new ApiResponse(200, "User profile updated successfully", {
             _id: updatedUser._id,
             name: updatedUser.name,
             email: updatedUser.email,
+            imageUrl: updatedUser.imageUrl,
         })
     );
 });
