@@ -2,7 +2,7 @@ import Submission from "../models/Submission.model.js";
 import Question from "../models/AddQuestion.models.js";
 import User from "../models/User.models.js";
 import Module from "../models/Module.models.js";
-
+import { sendSubmissionEmail } from "../utils/sendSubmissionEmail.util.js"
 
 // Helper: Update user stats for problem-solving progress
 // Helper: Update user stats for problem-solving progress
@@ -138,7 +138,10 @@ export const submitModule = async (req, res) => {
             .populate("student")
             .populate("questions.question");
 
-        console.log("Submission created successfully!");
+        console.log("Submission created successfully!", populatedSubmission);
+
+        await sendSubmissionEmail(req.user.email, req.user.name, populatedSubmission?.course?.name, populatedSubmission?.module?.title, totalMarks, maxTotalMarks);
+
         res.status(201).json({
             success: true,
             message: "Submission created successfully!",
@@ -452,7 +455,7 @@ export const updateQuestionMarks = async (req, res) => {
         // Recalculate totalMarks and maxTotalMarks for the submission
         console.log("Recalculating totalMarks and maxTotalMarks for the submission...");
         submission.totalMarks = submission.questions.reduce(
-            (sum, question) => sum + question.eachQuestionMark, 
+            (sum, question) => sum + question.eachQuestionMark,
             0
         );
         submission.maxTotalMarks = submission.questions.reduce(
