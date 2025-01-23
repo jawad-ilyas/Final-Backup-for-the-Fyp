@@ -4,7 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.utils.js";
 import { ApiError } from "../utils/ApiError.utils.js";
 import { ApiResponse } from "../utils/ApiResponse.utils.js";
 import axios from "axios";
-import { evaluateCode } from "../../services/generateScore.js";
+import { evaluateCode } from "../utils/generateScore.js";
 
 /**
  * POST /api/v1/compiler/run
