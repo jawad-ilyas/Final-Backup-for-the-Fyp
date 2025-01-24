@@ -30,10 +30,10 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
         cpp17: 54,
     };
 
-    const langId = languageMap[language];
-    if (!langId) {
-        throw new ApiError(400, `Language '${language}' not supported in this demo`);
-    }
+    // const langId = languageMap[language];
+    // if (!langId) {
+    //     throw new ApiError(400, `Language '${language}' not supported in this demo`);
+    // }
 
     // We'll do a naive approach: for each testCase, we create a submission,
     // then compare actual output with expected. We'll accumulate passCount, combinedOutput, etc.

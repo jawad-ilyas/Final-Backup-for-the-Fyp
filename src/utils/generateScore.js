@@ -1,4 +1,9 @@
 import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config({
+    path: "./.env",
+});
 const OPENAI_API_URL = process.env.OPENAI_API_URL_ENV;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY_ENV;
 
@@ -18,13 +23,13 @@ export const evaluateCode = async (question, userAnswer, sampleOutputs, totalMar
 
         console.log("userAnswer is", userAnswer)
         console.log("sampleOutputs are", sampleOutputs)
-    const formattedSampleOutputs = sampleOutputs
-                .map(
-                    (output, index) =>
-                        `Sample ${index + 1}:\n${output.input} | ${output.output}`
-                )
-                .join('\n');
-    const formattedPrompt = `
+        const formattedSampleOutputs = sampleOutputs
+            .map(
+                (output, index) =>
+                    `Sample ${index + 1}:\n${output.input} | ${output.output}`
+            )
+            .join('\n');
+        const formattedPrompt = `
                 You are an AI assistant specializing in evaluating user code. Below is a question, the user's answer, and sample outputs. Evaluate the user's answer strictly against the provided sample outputs. Count the total number of outputs that passed and calculate the score as follows:
 
                 Score = (Number of outputs passed / Total number of sample outputs) * ${totalMarks}
@@ -53,32 +58,32 @@ export const evaluateCode = async (question, userAnswer, sampleOutputs, totalMar
                 5. Return only the JSON object in the specified format.
             `;
 
-            const messages = [
-                { role: 'system', content: 'You are an AI assistant evaluating code based on provided test cases.' },
-                { role: 'user', content: formattedPrompt }
-            ];
+        const messages = [
+            { role: 'system', content: 'You are an AI assistant evaluating code based on provided test cases.' },
+            { role: 'user', content: formattedPrompt }
+        ];
 
-            const response = await axios.post(OPENAI_API_URL, {
-                model: 'gpt-4o-mini',
-                messages: messages,
-                max_tokens: 500,
-                temperature,
-                frequency_penalty
-            }, {
-                headers: {
-                    Authorization: `Bearer ${OPENAI_API_KEY}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+        const response = await axios.post(OPENAI_API_URL, {
+            model: 'gpt-4o-mini',
+            messages: messages,
+            max_tokens: 500,
+            temperature,
+            frequency_penalty
+        }, {
+            headers: {
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
-            const aiResponse = response.data.choices[0].message.content;
+        const aiResponse = response.data.choices[0].message.content;
 
-            const parsedResponse = JSON.parse(aiResponse);
-            return {
-                score: parsedResponse.score,
-                totalPass: parsedResponse.totalPass,
-                feedback: parsedResponse.feedback
-            };
+        const parsedResponse = JSON.parse(aiResponse);
+        return {
+            score: parsedResponse.score,
+            totalPass: parsedResponse.totalPass,
+            feedback: parsedResponse.feedback
+        };
     } catch (error) {
         console.error('Error during OpenAI evaluation request:', error.response?.data || error.message);
 
