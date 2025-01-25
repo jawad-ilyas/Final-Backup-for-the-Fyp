@@ -19,8 +19,8 @@ const questionSchema = new mongoose.Schema(
             enum: ['Easy', 'Medium', 'Hard'],
             default: 'Easy',
         },
-        sampleTestCases: [TestCaseSchema],
-        hiddenTestCases: [TestCaseSchema],
+        sampleTestCases: [TestCaseSchema], // Public test cases
+        hiddenTestCases: [TestCaseSchema], // Private test cases
         tags: [
             {
                 type: String,
@@ -48,7 +48,7 @@ const questionSchema = new mongoose.Schema(
             time: { type: String, trim: true },
             space: { type: String, trim: true },
         },
-        functionSignature: { type: String, trim: true },
+        functionSignature: { type: String, trim: true }, // Expected function signature for the problem
         hints: [
             {
                 type: String,
@@ -63,6 +63,12 @@ const questionSchema = new mongoose.Schema(
                 set: (value) => value.toLowerCase(), // Converts to lowercase
             },
         ],
+        problemWrapper: {
+            type: String,
+            required: true,
+            trim: true,
+            set: (value) => value.toLowerCase(), // Converts to lowercase
+        },
     },
     { timestamps: true }
 );
