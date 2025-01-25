@@ -129,8 +129,8 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
 
     console.log("test case", testCases)
 
-    const openAiResponse = await evaluateCode(question, code, testCases, totalMarks)
-    console.log("response is", openAiResponse)
+    // const openAiResponse = await evaluateCode(question, code, testCases, totalMarks)
+    // console.log("response is", openAiResponse)
     res.status(200).json(
         new ApiResponse(200, "Code run with Judge0 via RapidAPI", {
             output: openAiResponse?.feedback,
