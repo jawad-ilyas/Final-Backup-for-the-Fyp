@@ -64,6 +64,8 @@ export const twoSumWrapperTemplate = `
 #include <vector>
 #include <string>
 #include <sstream>
+#include <unordered_set>
+
 using namespace std;
 
 // ========== [USER_CODE_PLACEHOLDER] ==========
@@ -596,12 +598,6 @@ export const MaximumProductofTwoElementsinanArrayWrapperTemplate = `
 
 
 
-#include <iostream>
-using namespace std;
-
-// ========== [USER_CODE_PLACEHOLDER] ==========
-
-// ======================================================================
 
 int main() {
     string inputLine;
