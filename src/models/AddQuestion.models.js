@@ -65,7 +65,7 @@ const questionSchema = new mongoose.Schema(
         ],
         problemWrapper: {
             type: String,
-            required: true,
+       
             trim: true,
             set: (value) => value.toLowerCase(), // Converts to lowercase
         },
