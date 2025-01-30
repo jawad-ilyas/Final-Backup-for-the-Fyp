@@ -116,7 +116,8 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
     const judge0Url = "https://judge029.p.rapidapi.com/submissions?base64_encoded=false&wait=true&fields=*";
     const headers = {
         "Content-Type": "application/json",
-        "x-rapidapi-key": "05110206a9mshda2512decd38751p174847jsncffb02117c93",
+        // "x-rapidapi-key": "05110206a9mshda2512decd38751p174847jsncffb02117c93",
+        "x-rapidapi-key": "99fad6767fmsh4823a64f4ce7c31p1ea611jsn31949c21cf31",
         "x-rapidapi-host": "judge029.p.rapidapi.com"
     };
 
