@@ -124,8 +124,8 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
         "Content-Type": "application/json",
         // "x-rapidapi-key": "05110206a9mshda2512decd38751p174847jsncffb02117c93", /// final
         // "x-rapidapi-key": "99fad6767fmsh4823a64f4ce7c31p1ea611jsn31949c21cf31", /// tayyab 
-        // "x-rapidapi-key": "03792f3ef2msh0a399f9707481e0p161bd2jsnff0604eef7e1", // jawad mughal 12 
-        "x-rapidapi-key": "67c528990emsh9b7373c9783a6cdp1008e1jsn647b8175fe46", // jawad mughal dev 
+        "x-rapidapi-key": "03792f3ef2msh0a399f9707481e0p161bd2jsnff0604eef7e1", // jawad mughal 12 
+        // "x-rapidapi-key": "67c528990emsh9b7373c9783a6cdp1008e1jsn647b8175fe46", // jawad mughal dev 
         "x-rapidapi-host": "judge029.p.rapidapi.com"
     };
 
