@@ -193,6 +193,9 @@ int main() {
 
 export const majorityElementWrapperTemplate = `
 #include <iostream>
+#include <unordered_map>
+#include <algorithm>
+
 using namespace std;
 
 // ========== [USER_CODE_PLACEHOLDER] ==========
@@ -240,6 +243,10 @@ export const containsDuplicateWrapperTemplate = `
 
 
 #include <iostream>
+#include <unordered_set>
+#include <algorithm>
+#include <unordered_map>
+
 using namespace std;
 
 // ========== [USER_CODE_PLACEHOLDER] ==========
@@ -481,6 +488,10 @@ int main() {
 export const fariCandySwapWrapperTemplate = `
 
 #include <iostream>
+#include <unordered_set>
+#include <unordered_map>
+
+
 using namespace std;
 
 // ========== [USER_CODE_PLACEHOLDER] ==========
@@ -598,6 +609,10 @@ export const MaximumProductofTwoElementsinanArrayWrapperTemplate = `
 
 
 
+#include <iostream>
+#include <unordered_set>
+#include <algorithm>
+#include <unordered_map>
 
 int main() {
     string inputLine;
@@ -632,6 +647,118 @@ int main() {
 
     return 0;
 }
+
+
+`;
+
+
+
+export const minMovesToSeatWrapperTemplate = `
+
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+// ========== [USER_CODE_PLACEHOLDER] ==========
+
+// ======================================================================
+
+int main() {
+    string inputLine;
+    getline(cin, inputLine); // Read the entire input line
+
+    // Split into seatsPart and studentsPart using ", " as delimiter
+    size_t splitPos = inputLine.find(", ");
+    if (splitPos == string::npos) {
+        cerr << "Invalid input format." << endl;
+        return 1;
+    }
+
+    string seatsPart = inputLine.substr(0, splitPos);
+    string studentsPart = inputLine.substr(splitPos + 2); // Skip ", "
+
+    // Parse seats array
+    int seats[100], sizeSeats = 0;
+    {
+        auto start = seatsPart.find('[');
+        auto end = seatsPart.find(']');
+        string numsStr = seatsPart.substr(start + 1, end - start - 1);
+        size_t pos = 0;
+        while ((pos = numsStr.find(',')) != string::npos) {
+            seats[sizeSeats++] = stoi(numsStr.substr(0, pos));
+            numsStr.erase(0, pos + 1);
+        }
+        if (!numsStr.empty()) {
+            seats[sizeSeats++] = stoi(numsStr);
+        }
+    }
+
+    // Parse students array
+    int students[100], sizeStudents = 0;
+    {
+        auto start = studentsPart.find('[');
+        auto end = studentsPart.find(']');
+        string numsStr = studentsPart.substr(start + 1, end - start - 1);
+        size_t pos = 0;
+        while ((pos = numsStr.find(',')) != string::npos) {
+            students[sizeStudents++] = stoi(numsStr.substr(0, pos));
+            numsStr.erase(0, pos + 1);
+        }
+        if (!numsStr.empty()) {
+            students[sizeStudents++] = stoi(numsStr);
+        }
+    }
+
+    // Call the user function
+    int result = minMovesToSeat(seats, sizeSeats, students, sizeStudents);
+
+    cout << result << endl;
+    return 0;
+}
+
+`;
+
+
+export const maxProductDifferenceWrapperTemplate = `
+
+#include <iostream>
+#include <vector>
+#include <sstream>
+#include <algorithm>
+
+using namespace std;
+
+// ========== [USER_CODE_PLACEHOLDER] ==========
+
+int maxProductDifference(vector<int>& nums); // Declare function
+
+int main() {
+    string inputLine;
+    getline(cin, inputLine); // Read input
+
+    // Parse nums array
+    vector<int> nums;
+    auto start = inputLine.find('[');
+    auto end = inputLine.find(']');
+    string numsStr = inputLine.substr(start + 1, end - start - 1);
+    size_t pos = 0;
+    while ((pos = numsStr.find(',')) != string::npos) {
+        nums.push_back(stoi(numsStr.substr(0, pos)));
+        numsStr.erase(0, pos + 1);
+    }
+    if (!numsStr.empty()) {
+        nums.push_back(stoi(numsStr));
+    }
+
+    // Call function and print result
+    int result = maxProductDifference(nums);
+    cout << result << endl;  // Ensure output is printed
+    return 0;
+}
+
+
+
 
 
 `;
