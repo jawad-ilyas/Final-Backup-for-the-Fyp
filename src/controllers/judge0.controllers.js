@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.utils.js";
 import { ApiResponse } from "../utils/ApiResponse.utils.js";
 import axios from "axios";
 import { buildWrapperCode } from "../wrappers/buildWrapperCode.js"; // the function from step #2
+import evaluateCode from "../../services/generateScore.js";
 
 // 1) The wrapper generator from above
 // function buildWrapperCode(userFunctionCode) {
@@ -82,8 +83,13 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
         question,
         questionId,    // <--- dynamic question ID
         testCases,
-        totalMarks = 10
+        totalMarks
     } = req.body;
+    // console.log("code", code)
+    // console.log("language", language)
+    // console.log("questionId", questionId)
+    // console.log("testCases", testCases)
+    // console.log("totalMarks", totalMarks)
 
     if (!code) {
         throw new ApiError(400, "No code provided.");
@@ -107,7 +113,7 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
     let finalCode;
     try {
         finalCode = buildWrapperCode(code, questionId);
-        console.log("final code print out is this ", finalCode)
+        // console.log("final code print out is this ", finalCode)
     } catch (err) {
         throw new ApiError(400, err.message);
     }
@@ -121,8 +127,11 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
         "x-rapidapi-host": "judge029.p.rapidapi.com"
     };
 
+    //   console.log("header of the api " , headers)
+
     let passCount = 0;
     const totalCount = testCases.length;
+    // console.log("total test cases ", totalCount);
     const results = [];
 
     async function submitOneTestCase(stdinInput) {
@@ -148,7 +157,13 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
 
         // Each test => compile & run the final code with this "input"
         const result = await submitOneTestCase(input);
+
+        //    console.log("result of the test cases is this : ", i, result)
         const { stdout, stderr, compile_output } = result;
+        //    console.log("stdout of the test cases is this : ", i, stdout)
+        //    console.log("stderr of the test cases is this : ", i, stderr)
+        //    console.log("compile_output of the test cases is this : ", i, compile_output)
+
 
         let status = "Failed";
         let actual = "";
@@ -179,14 +194,31 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
     }
 
     // 3) Calculate final score and return
-    const score = Math.round((passCount / totalCount) * totalMarks);
+
+    //    ! this line defined who much we need to give number to pass all the test cases 
+    const score = Math.round((passCount / totalCount) * (totalMarks / 2));
+    const ModelReponse = await evaluateCode(question, code, testCases, (totalMarks / 2))
+    console.log("response is", ModelReponse)
+
+    const { correctnessScore, efficiencyScore, edgeCaseScore, readabilityScore, bestPracticesScore, feedback } = ModelReponse
+    // console.log("score is this ", score)
+    // console.log("correctnessScore is this ", correctnessScore)
+    // console.log("efficiencyScore is this ", efficiencyScore)
+    // console.log("edgeCaseScore is this ", edgeCaseScore)
+    // console.log("readabilityScore is this ", readabilityScore)
+    // console.log("bestPracticesScore is this ", bestPracticesScore)
+    // console.log("feedback is this ", feedback)
+    const ModelScore = correctnessScore + efficiencyScore + edgeCaseScore + readabilityScore + bestPracticesScore;
     res.status(200).json(
         new ApiResponse(200, "Code executed successfully", {
+            output: feedback,
             passCount,
             totalCount,
-            score,
+            score: ModelScore + score,
             totalMarks,
             results
         })
     );
+
+
 });

@@ -3,7 +3,7 @@ import { WRAPPER_TEMPLATES } from "./wrapperTemplates.js";
 export const buildWrapperCode = (userFunctionCode, questionId) => {
     // 1) Pick the correct template by questionId
     const template = WRAPPER_TEMPLATES[questionId];
-    console.log("template wrapper is this , template" , template)
+    // console.log("template wrapper is this , template" , template)
     if (!template) {
         // If we don't have a matching template, throw an error or fallback
         throw new Error(`No wrapper template found for questionId = ${questionId}`);
