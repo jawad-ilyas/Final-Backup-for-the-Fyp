@@ -66,7 +66,7 @@ export const submitModule = async (req, res) => {
     console.log("Submit Module - Started");
     const { moduleId, courseId, teacherId, solutions } = req.body;
     const studentId = req.user._id;
-
+    console.log("solution of the submission " , solutions)
     try {
         // Check if the submission already exists
         console.log("Checking for existing submission...");
@@ -91,9 +91,8 @@ export const submitModule = async (req, res) => {
                 throw new Error(`Invalid marks for question: ${sol.questionId}`);
             }
 
-            const awardedMarks = Math.min(Math.floor(Math.random() * maxMarks) + 1, maxMarks); // Random marks <= maxMarks
             console.log(
-                `Question: ${sol.questionId}, Max Marks: ${maxMarks}, Awarded Marks: ${awardedMarks}`
+                `Question: ${sol.questionId}, Max Marks: ${maxMarks}, Awarded Marks: ${sol.score}`
             );
 
             return {
@@ -101,8 +100,8 @@ export const submitModule = async (req, res) => {
                 code: sol.code || "// No code provided",
                 output: sol.output || "No output generated",
                 eachQuestionMark: sol.marks,
-                marksAwarded: awardedMarks,
-                remarks: "Good attempt. Keep improving!",
+                marksAwarded: sol.score,
+                remarks: sol.output,
                 correctSolution: "// Correct solution placeholder",
                 aiFeedback: "Focus on edge cases and complexity.",
             };
@@ -138,7 +137,7 @@ export const submitModule = async (req, res) => {
             .populate("student")
             .populate("questions.question");
 
-        console.log("Submission created successfully!", populatedSubmission);
+        // console.log("Submission created successfully!", populatedSubmission);
 
         await sendSubmissionEmail(req.user.email, req.user.name, populatedSubmission?.course?.name, populatedSubmission?.module?.title, totalMarks, maxTotalMarks);
 

@@ -122,8 +122,8 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
     const judge0Url = "https://judge029.p.rapidapi.com/submissions?base64_encoded=false&wait=true&fields=*";
     const headers = {
         "Content-Type": "application/json",
-        // "x-rapidapi-key": "05110206a9mshda2512decd38751p174847jsncffb02117c93",
-        "x-rapidapi-key": "99fad6767fmsh4823a64f4ce7c31p1ea611jsn31949c21cf31",
+        "x-rapidapi-key": "05110206a9mshda2512decd38751p174847jsncffb02117c93",
+        // "x-rapidapi-key": "99fad6767fmsh4823a64f4ce7c31p1ea611jsn31949c21cf31",
         "x-rapidapi-host": "judge029.p.rapidapi.com"
     };
 
@@ -197,17 +197,18 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
 
     //    ! this line defined who much we need to give number to pass all the test cases 
     const score = Math.round((passCount / totalCount) * (totalMarks / 2));
-    const ModelReponse = await evaluateCode(question, code, testCases, (totalMarks / 2))
+
+    const ModelReponse = await evaluateCode(question, code, passCount, (totalMarks / 2))
     console.log("response is", ModelReponse)
 
     const { correctnessScore, efficiencyScore, edgeCaseScore, readabilityScore, bestPracticesScore, feedback } = ModelReponse
-    // console.log("score is this ", score)
-    // console.log("correctnessScore is this ", correctnessScore)
-    // console.log("efficiencyScore is this ", efficiencyScore)
-    // console.log("edgeCaseScore is this ", edgeCaseScore)
-    // console.log("readabilityScore is this ", readabilityScore)
-    // console.log("bestPracticesScore is this ", bestPracticesScore)
-    // console.log("feedback is this ", feedback)
+    console.log("score is this ", score)
+    console.log("correctnessScore is this ", correctnessScore)
+    console.log("efficiencyScore is this ", efficiencyScore)
+    console.log("edgeCaseScore is this ", edgeCaseScore)
+    console.log("readabilityScore is this ", readabilityScore)
+    console.log("bestPracticesScore is this ", bestPracticesScore)
+    console.log("feedback is this ", feedback)
     const ModelScore = correctnessScore + efficiencyScore + edgeCaseScore + readabilityScore + bestPracticesScore;
     res.status(200).json(
         new ApiResponse(200, "Code executed successfully", {

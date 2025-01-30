@@ -12,7 +12,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY_ENV;
 console.log("OPENAI_API_URL:", OPENAI_API_URL);
 console.log("OPENAI_API_KEY:", OPENAI_API_KEY);
 
-export const evaluateCode = async (question, userAnswer, testCases, totalMarks, temperature = 0.7, frequency_penalty = 0.5) => {
+export const evaluateCode = async (question, userAnswer, passCount, totalMarks, temperature = 0.7, frequency_penalty = 0.5) => {
     try {
         // console.log("userAnswer is \n", userAnswer);
         // console.log("question is : ", question);
@@ -26,9 +26,9 @@ export const evaluateCode = async (question, userAnswer, testCases, totalMarks, 
             
             1. **Correctness**: Does the code solve the problem as described in the question? Assign up to ${totalMarks * 0.4} marks.
             2. **Efficiency**: Is the code optimized in terms of time and space complexity? Assign up to ${totalMarks * 0.3} marks.
-            3. **Edge Case Handling**: Does the code handle edge cases effectively? Assign up to ${totalMarks * 0.1} marks.
-            4. **Readability**: Is the code easy to understand, with clear variable names and structure? Assign up to ${totalMarks * 0.1} marks.
-            5. **Best Practices**: Does the code follow standard coding conventions and principles? Assign up to ${totalMarks * 0.1} marks.
+            3. **Edge Case Handling**: Does the code handle edge cases effectively? Assign up to ${totalMarks * 0.07} marks.
+            4. **Readability**: Is the code easy to understand, with clear variable names and structure? Assign up to ${totalMarks * 0.09} marks.
+            5. **Best Practices**: Does the code follow standard coding conventions and principles? Assign up to ${totalMarks * 0.08} marks.
 
             Return only the following JSON response format:
             {
@@ -78,7 +78,7 @@ export const evaluateCode = async (question, userAnswer, testCases, totalMarks, 
         const aiResponse = response.data.choices[0].message.content;
         const parsedResponse = JSON.parse(aiResponse);
         console.log("response of the model  : , ", parsedResponse)
-
+        
         return {
             score: parsedResponse.score,
             correctnessScore: parsedResponse.correctnessScore,
