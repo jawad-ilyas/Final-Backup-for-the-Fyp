@@ -614,6 +614,11 @@ export const MaximumProductofTwoElementsinanArrayWrapperTemplate = `
 #include <algorithm>
 #include <unordered_map>
 
+
+// ========== [USER_CODE_PLACEHOLDER] ==========
+
+// ======================================================================
+
 int main() {
     string inputLine;
     getline(cin, inputLine); // Reading the entire input line for nums
@@ -759,6 +764,85 @@ int main() {
 
 
 
+
+
+`;
+
+
+
+
+
+export const sortThePeopleWrapperTemplate = `
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+
+using namespace std;
+
+// ========== [USER_CODE_PLACEHOLDER] ==========
+
+// ======================================================================
+
+int main() {
+    string inputLine;
+    getline(cin, inputLine); // Read the entire input line
+
+    // Split into namesPart and heightsPart using ", " as delimiter
+    size_t splitPos = inputLine.find(", ");
+    if (splitPos == string::npos) {
+        cerr << "Invalid input format." << endl;
+        return 1;
+    }
+
+    string namesPart = inputLine.substr(0, splitPos);
+    string heightsPart = inputLine.substr(splitPos + 2); // Skip ", "
+
+    // Parse names
+    vector<string> names;
+    {
+        auto start = namesPart.find('[');
+        auto end = namesPart.find(']');
+        string namesStr = namesPart.substr(start + 1, end - start - 1);
+        stringstream ss(namesStr);
+        string name;
+        while (getline(ss, name, ',')) {
+            name.erase(remove(name.begin(), name.end(), '"'), name.end()); // Remove quotes
+            name.erase(0, name.find_first_not_of(" "));
+            name.erase(name.find_last_not_of(" ") + 1);
+            names.push_back(name);
+        }
+    }
+
+    // Parse heights
+    vector<int> heights;
+    {
+        auto start = heightsPart.find('[');
+        auto end = heightsPart.find(']');
+        string numsStr = heightsPart.substr(start + 1, end - start - 1);
+        stringstream ss(numsStr);
+        int height;
+        while (ss >> height) {
+            heights.push_back(height);
+            if (ss.peek() == ',') ss.ignore();
+        }
+    }
+
+    // Call the user function
+    vector<string> sortedNames = sortPeople(names, heights);
+
+    // Print the result
+    cout << "[";
+    for (size_t i = 0; i < sortedNames.size(); ++i) {
+        cout << "" << sortedNames[i] << "";
+        if (i < sortedNames.size() - 1) cout << ", ";
+    }
+    cout << "]" << endl;
+
+    return 0;
+}
 
 
 `;

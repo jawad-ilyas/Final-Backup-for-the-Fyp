@@ -63,7 +63,7 @@ export const evaluateCode = async (question, userAnswer, passCount, totalMarks, 
         const response = await axios.post(OPENAI_API_URL, {
             model: 'gpt-4o-mini',
             messages: messages,
-            max_tokens: 800, 
+            max_tokens: 800,
             temperature,
             frequency_penalty
         }, {
@@ -73,12 +73,21 @@ export const evaluateCode = async (question, userAnswer, passCount, totalMarks, 
             }
         });
         // console.log("response of the model  : , ", response)
-        
+
         // Parse AI Response
         const aiResponse = response.data.choices[0].message.content;
+        console.log("model response with out jsong formate ", aiResponse);
         const parsedResponse = JSON.parse(aiResponse);
         console.log("response of the model  : , ", parsedResponse)
-        
+
+
+        // Parse AI Response
+        // const parsedResponse = response.data.choices[0].message.content;
+        // console.log("model response with out jsong formate ", parsedResponse);
+        // // const parsedResponse = JSON.parse(aiResponse);
+        // // console.log("response of the model  : , ", parsedResponse)
+
+
         return {
             score: parsedResponse.score,
             correctnessScore: parsedResponse.correctnessScore,
