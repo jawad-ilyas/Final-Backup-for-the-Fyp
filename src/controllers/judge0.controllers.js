@@ -84,7 +84,7 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
         question,
         questionId,    // <--- dynamic question ID
         testCases,
-        totalMarks
+        totalMarks =10
     } = req.body;
     // console.log("code", code)
     // console.log("language", language)
@@ -135,7 +135,7 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
         // "x-rapidapi-key": "f5baa54a05msh9dada85d45f5b7bp18a858jsnb5fc34ff81fb", // nosherwan 
         // "x-rapidapi-key": "1a480548eemshec4f133071760b0p12ed61jsn5c07a9575325", // shafqat 
         // "x-rapidapi-key": "1a480548eemshec4f133071760b0p12ed61jsn5c07a9575325", // shafqat 
-        "x-rapidapi-key": "523c0ab31cmshc3119057208d84ep162191jsn09a20b0616f0", // shafqat 
+        "x-rapidapi-key": "523c0ab31cmshc3119057208d84ep162191jsn09a20b0616f0", // dr awais 
 
 
         "x-rapidapi-host": "judge029.p.rapidapi.com"
@@ -210,6 +210,9 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
     // 3) Calculate final score and return
 
     //    ! this line defined who much we need to give number to pass all the test cases 
+   console.log("-----------------------------------------");
+    console.log(totalCount, passCount, totalMarks)
+   console.log("-----------------------------------------");
     const score = Math.round((passCount / totalCount) * (totalMarks / 2));
 
     const ModelReponse = await evaluateCode(question, code, passCount, (totalMarks / 2))
