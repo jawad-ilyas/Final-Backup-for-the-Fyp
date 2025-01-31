@@ -126,9 +126,17 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
         // "x-rapidapi-key": "05110206a9mshda2512decd38751p174847jsncffb02117c93", /// final
         // "x-rapidapi-key": "658001fc46msh3fe0f4bd340c119p1706eajsn0da048c39fdd", /// shuja
         // "x-rapidapi-key": "99fad6767fmsh4823a64f4ce7c31p1ea611jsn31949c21cf31", /// tayyab 
-        "x-rapidapi-key": "03792f3ef2msh0a399f9707481e0p161bd2jsnff0604eef7e1", // jawad mughal 12 
-        "x-rapidapi-key": "d369d008e0mshaa393012c343fb3p172434jsn0d51c11c0d8d", // faizan
+        // "x-rapidapi-key": "03792f3ef2msh0a399f9707481e0p161bd2jsnff0604eef7e1", // jawad mughal 12 
+        // "x-rapidapi-key": "d369d008e0mshaa393012c343fb3p172434jsn0d51c11c0d8d", // faizan
         // "x-rapidapi-key": "67c528990emsh9b7373c9783a6cdp1008e1jsn647b8175fe46", // jawad mughal dev 
+        // "x-rapidapi-key": "1898dbe733mshf8cb8edb7f80a02p12339cjsna219e7639f92", // ibrahium 
+        // "x-rapidapi-key": "a9692794d4mshdb39e6de57215edp16b133jsn06ce37e7c500", // shuja 
+        // "x-rapidapi-key": "a9692794d4mshdb39e6de57215edp16b133jsn06ce37e7c500", // shuja 
+        // "x-rapidapi-key": "f5baa54a05msh9dada85d45f5b7bp18a858jsnb5fc34ff81fb", // nosherwan 
+        // "x-rapidapi-key": "1a480548eemshec4f133071760b0p12ed61jsn5c07a9575325", // shafqat 
+        // "x-rapidapi-key": "1a480548eemshec4f133071760b0p12ed61jsn5c07a9575325", // shafqat 
+        "x-rapidapi-key": "523c0ab31cmshc3119057208d84ep162191jsn09a20b0616f0", // shafqat 
+
 
         "x-rapidapi-host": "judge029.p.rapidapi.com"
     };
