@@ -165,7 +165,7 @@ export const getStudentProblemStats = asyncHandler(async (req, res) => {
 
     // student.solvedQuestions is an array of { question, solvedAt, ... }
     totalSolved = student.solvedQuestions.length;
-
+    console.log("student.solvedQuestions" , student.solvedQuestions);
     student.solvedQuestions.forEach((sq) => {
         const diff = sq.question.difficulty; // "Easy" | "Medium" | "Hard"
         if (diff === "Easy") easyCount++;

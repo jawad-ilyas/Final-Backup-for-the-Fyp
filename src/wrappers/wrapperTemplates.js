@@ -4,7 +4,7 @@ import { twoSumWrapperTemplate, removeElementWrapperTemplate, findtargetindicesa
 
 export const WRAPPER_TEMPLATES = {
 
-    "6798d6df3ac613e9ae19f310": removeElementWrapperTemplate,
+    "679c636014d41a70ceb3e2ca": removeElementWrapperTemplate,
     "6798af6449aa36285ae92299": twoSumWrapperTemplate,  // two sum
     "6798e1f146c69160b3391fe3": findtargetindicesaftersortingarrayWrapperTemplate,
     "6798e60ba932bb77d2da4b6d": majorityElementWrapperTemplate,
