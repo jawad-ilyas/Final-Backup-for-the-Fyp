@@ -200,10 +200,10 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
     //    ! this line defined who much we need to give number to pass all the test cases 
     const score = Math.round((passCount / totalCount) * (totalMarks / 2));
 
-    // const ModelReponse = await evaluateCode(question, code, passCount, (totalMarks / 2))
+     const ModelReponse = await evaluateCode(question, code, passCount, (totalMarks / 2))
     // console.log("response is", ModelReponse)
 
-    // const { correctnessScore, efficiencyScore, edgeCaseScore, readabilityScore, bestPracticesScore, feedback } = ModelReponse
+     const { correctnessScore, efficiencyScore, edgeCaseScore, readabilityScore, bestPracticesScore, feedback } = ModelReponse
     // console.log("score is this ", score)
     // console.log("correctnessScore is this ", correctnessScore)
     // console.log("efficiencyScore is this ", efficiencyScore)
@@ -211,15 +211,13 @@ export const runStudentCodeJudge0 = asyncHandler(async (req, res) => {
     // console.log("readabilityScore is this ", readabilityScore)
     // console.log("bestPracticesScore is this ", bestPracticesScore)
     // console.log("feedback is this ", feedback)
-    // const ModelScore = correctnessScore + efficiencyScore + edgeCaseScore + readabilityScore + bestPracticesScore;
+     const ModelScore = correctnessScore + efficiencyScore + edgeCaseScore + readabilityScore + bestPracticesScore;
     res.status(200).json(
         new ApiResponse(200, "Code executed successfully", {
-            // output: feedback || "",
-            output: "",
+             output: feedback,
             passCount,
             totalCount,
-            // score: ModelScore + score,
-            score: score,
+             score: ModelScore + score,
             totalMarks,
             results
         })
